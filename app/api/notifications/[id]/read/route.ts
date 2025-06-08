@@ -11,6 +11,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Mark the notification as read for this user
     await markNotificationAsRead(params.id, user.id)
 
     return NextResponse.json({ success: true })
