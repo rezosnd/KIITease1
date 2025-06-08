@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, ErrorBoundaryState> {
   constructor(props: React.PropsWithChildren<{}>) {
     super(props)
-    this.state = { hasError: false }
+    this.state = { hasError: false, error: undefined }
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -21,11 +21,12 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, 
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error to console for devs
     console.error("Error caught by boundary:", error, errorInfo)
-
-    // Log error to monitoring service in production
+    // Optionally send error to a monitoring service
     if (process.env.NODE_ENV === "production") {
-      // Send to error tracking service (e.g., Sentry)
+      // You can integrate with Sentry or another provider here
+      // e.g. Sentry.captureException(error);
     }
   }
 
@@ -44,9 +45,9 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, 
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {process.env.NODE_ENV === "development" && (
+              {process.env.NODE_ENV === "development" && this.state.error?.message && (
                 <div className="p-3 bg-gray-100 rounded text-xs font-mono text-gray-700 overflow-auto max-h-32">
-                  {this.state.error?.message}
+                  {this.state.error.message}
                 </div>
               )}
               <div className="flex gap-2">
