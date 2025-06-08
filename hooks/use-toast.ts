@@ -16,7 +16,7 @@ type ToasterToast = ToastProps & {
 }
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 3000 // 3 seconds for real UX
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -90,9 +90,6 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
-
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -100,7 +97,6 @@ export const reducer = (state: State, action: Action): State => {
           addToRemoveQueue(toast.id)
         })
       }
-
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -124,6 +120,8 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       }
+    default:
+      return state
   }
 }
 
@@ -141,15 +139,6 @@ function dispatch(action: Action) {
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
-  const toast = React.useCallback(({ title, description, variant = "default" }: ToastProps) => {
-    // Simple alert for now - you can implement a proper toast system later
-    if (variant === "destructive") {
-      alert(`Error: ${title}\n${description}`)
-    } else {
-      alert(`${title}\n${description}`)
-    }
-  }, [])
-
   React.useEffect(() => {
     listeners.push(setState)
     return () => {
@@ -158,13 +147,106 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
+
+  // Real toast: dispatches to state, not just alert
+  const toast = React.useCallback(
+    ({
+      title,
+      description,
+      variant = "default",
+    }: ToastProps) => {
+      const id = genId()
+      const newToast: ToasterToast = {
+        id,
+        title,
+        description,
+        variant,
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) dispatch({ type: "DISMISS_TOAST", toastId: id })
+        },
+      }
+      dispatch({ type: "ADD_TOAST", toast: newToast })
+      return id
+    },
+    [],
+  )
+
+  const dismiss = React.useCallback((toastId?: string) => {
+    dispatch({ type: "DISMISS_TOAST", toastId })
+  }, [])
 
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    dismiss,
   }
+}
+
+// Optional: ToastViewport React component to render the toasts visually
+export function ToastViewport() {
+  const { toasts, dismiss } = useToast()
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 24,
+        right: 24,
+        zIndex: 9999,
+        width: 360,
+        maxWidth: "100vw",
+      }}
+    >
+      {toasts.map((toast) =>
+        toast.open ? (
+          <div
+            key={toast.id}
+            style={{
+              background: toast.variant === "destructive" ? "#fee2e2" : "#fff",
+              color: toast.variant === "destructive" ? "#b91c1c" : "#262626",
+              border: "1px solid #e5e7eb",
+              borderRadius: 8,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              padding: 16,
+              marginBottom: 12,
+              minWidth: 280,
+              maxWidth: 360,
+              fontSize: 15,
+              fontFamily: "inherit",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              animation: "fade-in 0.15s",
+            }}
+            role={toast.variant === "destructive" ? "alert" : "status"}
+            tabIndex={0}
+          >
+            {toast.title && (
+              <strong style={{ fontWeight: 600, fontSize: 16 }}>{toast.title}</strong>
+            )}
+            {toast.description && <div>{toast.description}</div>}
+            <button
+              style={{
+                marginTop: 8,
+                marginLeft: "auto",
+                background: "none",
+                border: "none",
+                color: "#4f46e5",
+                cursor: "pointer",
+                padding: 0,
+                fontSize: 14,
+              }}
+              onClick={() => dismiss(toast.id)}
+              aria-label="Dismiss"
+            >
+              Dismiss
+            </button>
+          </div>
+        ) : null,
+      )}
+    </div>
+  )
 }
 
 export { useToast }
