@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 })
     }
 
-    // Hash the new password
-    const passwordHash = hashPassword(password)
+    // Hash the new password (ensure await if hashPassword is async)
+    const passwordHash = await hashPassword(password)
 
     // Update user password and clear reset token
     await db.collection("users").updateOne(
@@ -62,16 +62,15 @@ export async function POST(request: NextRequest) {
         $set: {
           passwordHash,
           updatedAt: new Date(),
-          // Reset login attempts on password reset
           loginAttempts: 0,
           accountLocked: false,
         },
         $unset: {
-          resetPasswordToken: 1,
-          resetPasswordExpiry: 1,
-          lockedUntil: 1,
+          resetPasswordToken: "",
+          resetPasswordExpiry: "",
+          lockedUntil: "",
         },
-      },
+      }
     )
 
     // Log successful password reset
