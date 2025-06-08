@@ -1,4 +1,5 @@
-// Application constants
+// Application constants and configuration for KIITease
+
 export const APP_CONFIG = {
   name: "KIITease",
   version: "1.0.0",
@@ -19,11 +20,25 @@ export const APP_CONFIG = {
     targetCount: 20,
     rewardAmount: 499,
   },
-}
+} as const
 
-export const BRANCHES = ["CSE", "ECE", "ME", "CE", "EE", "IT", "ETC", "EEE", "CSSE", "CSCE"] as const
+export const BRANCHES = [
+  "CSE",  // Computer Science & Engineering
+  "ECE",  // Electronics & Communication Engineering
+  "ME",   // Mechanical Engineering
+  "CE",   // Civil Engineering
+  "EE",   // Electrical Engineering
+  "IT",   // Information Technology
+  "ETC",  // Electronics & Telecommunication Engineering
+  "EEE",  // Electrical & Electronics Engineering
+  "CSSE", // Computer Science & Systems Engineering
+  "CSCE", // Computer Science & Computer Engineering
+] as const
+
 export const YEARS = [1, 2, 3, 4] as const
+
 export const USER_ROLES = ["free", "paid", "admin"] as const
+
 export const REFUND_STATUSES = ["none", "eligible", "pending", "issued"] as const
 
 export const ERROR_MESSAGES = {
