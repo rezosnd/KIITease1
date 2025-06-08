@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Star, Users, TrendingUp, Download } from "lucide-react"
+import { BookOpen, Star, Users, TrendingUp, Download, Lock, CreditCard } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface User {
@@ -41,7 +41,6 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Fetch user and dashboard stats from your backend API
     async function fetchDashboard() {
       try {
         setLoading(true)
@@ -59,7 +58,6 @@ export default function DashboardPage() {
         setStats(statsData.stats)
         setActivity(activityData.activity)
       } catch (err) {
-        // Not authenticated, redirect to login
         router.push("/login")
       } finally {
         setLoading(false)
@@ -80,30 +78,48 @@ export default function DashboardPage() {
   if (!user || !stats) return null
 
   // Feature access logic
-  const canAccessNotes = user.role === "paid" || user.role === "admin"
-  const canViewReviews = user.role === "paid" || user.role === "admin"
-  const canWriteReviews = user.role !== "admin"
   const isAdmin = user.role === "admin"
+  const isPaid = user.role === "paid"
+  const isFree = user.role === "free"
 
+  // Features for all users
   const features = [
-    {
-      icon: BookOpen,
-      title: "Study Notes",
-      description: "Access premium study materials for your branch",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      enabled: canAccessNotes,
-      onClick: () => canAccessNotes ? router.push("/notes") : null,
-    },
+    // Paid and Admin: Access/analytics
+    ...(isPaid || isAdmin
+      ? [
+          {
+            icon: BookOpen,
+            title: "Study Notes",
+            description: "Access premium study materials for your branch",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
+            enabled: true,
+            onClick: () => router.push("/notes"),
+          },
+          {
+            icon: TrendingUp,
+            title: "Analytics",
+            description: "View your learning progress",
+            color: "text-purple-600",
+            bgColor: "bg-purple-50",
+            enabled: true,
+            onClick: () => router.push("/analytics"),
+          }
+        ]
+      : []),
+    // Reviews
     {
       icon: Star,
       title: "Teacher Reviews",
-      description: canViewReviews ? "Read and write reviews for teachers" : "Write reviews for teachers",
+      description: isPaid || isAdmin
+        ? "Read and write reviews for teachers"
+        : "Write reviews for teachers",
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
-      enabled: canViewReviews || canWriteReviews,
+      enabled: true,
       onClick: () => router.push("/reviews"),
     },
+    // Referrals (all users)
     {
       icon: Users,
       title: "Referrals",
@@ -113,15 +129,30 @@ export default function DashboardPage() {
       enabled: true,
       onClick: () => router.push("/referrals"),
     },
+    // Free user: Payment/Upgrade option
+    ...(isFree
+      ? [
+          {
+            icon: CreditCard,
+            title: "Upgrade to Paid",
+            description: "Unlock premium features by upgrading your account",
+            color: "text-pink-600",
+            bgColor: "bg-pink-50",
+            enabled: true,
+            onClick: () => router.push("/payments"),
+          }
+        ]
+      : []),
+    // Change password (all users)
     {
-      icon: TrendingUp,
-      title: "Analytics",
-      description: "View your learning progress",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      enabled: canAccessNotes, // only paid/admin
-      onClick: () => canAccessNotes ? router.push("/analytics") : null,
-    },
+      icon: Lock,
+      title: "Change Password",
+      description: "Update your account password",
+      color: "text-gray-700",
+      bgColor: "bg-gray-100",
+      enabled: true,
+      onClick: () => router.push("/change-password"),
+    }
   ]
 
   return (
