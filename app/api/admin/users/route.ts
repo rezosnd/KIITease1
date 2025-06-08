@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate admin user
     const user = await getAuthUser(request)
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const db = await getDatabase()
 
-    // Get users with referral count
+    // Aggregate users with completed referral count
     const users = await db
       .collection("users")
       .aggregate([
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
               $size: {
                 $filter: {
                   input: "$referrals",
-                  cond: { $eq: ["$$this.status", "completed"] },
+                  as: "ref",
+                  cond: { $eq: ["$$ref.status", "completed"] },
                 },
               },
             },
