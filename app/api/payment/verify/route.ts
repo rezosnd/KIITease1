@@ -6,14 +6,17 @@ import { createNotification, NOTIFICATION_TEMPLATES } from "@/lib/notifications"
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate the user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Parse verification data from request body
     const verification = await request.json()
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = verification
 
+    // Check for required payment verification fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ error: "Missing payment verification data" }, { status: 400 })
     }
@@ -24,13 +27,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 })
     }
 
-    // Process payment success with referral handling
+    // Process payment success, handle referrals, upgrade user, etc.
     const result = await processPaymentSuccess(verification, user.id)
 
-    // Send success email
+    // Send payment success email
     await sendPaymentSuccessEmail({ name: user.name, email: user.email }, result.order.amount)
 
-    // Create success notification
+    // Create a notification for the user
     await createNotification({
       userId: user.id,
       ...NOTIFICATION_TEMPLATES.PAYMENT_SUCCESS(result.order.amount),
