@@ -1,20 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { BookOpen, Users, Star, TrendingUp, ArrowRight, GraduationCap, FileText, Award, Zap } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BookOpen,
+  Users,
+  Star,
+  TrendingUp,
+  ArrowRight,
+  GraduationCap,
+  FileText,
+  Award,
+  Zap,
+} from "lucide-react";
 
 export default function HomePage() {
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalUsers: 2000,
     totalNotes: 500,
     totalReviews: 1200,
     averageRating: 4.5,
-  })
+  });
 
   const features = [
     {
@@ -41,9 +51,9 @@ export default function HomePage() {
       description: "Get personalized recommendations based on your academic needs",
       color: "bg-purple-50",
     },
-  ]
+  ];
 
-  const branches = ["CSE", "ECE", "ME", "CE", "EE", "IT", "ETC", "EEE", "CSSE", "CSCE"]
+  const branches = ["CSE", "ECE", "ME", "CE", "EE", "IT", "ETC", "EEE", "CSSE", "CSCE"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -62,7 +72,6 @@ export default function HomePage() {
                 KIITease
               </span>
             </motion.div>
-
             <motion.div
               className="flex items-center space-x-4"
               initial={{ opacity: 0, x: 20 }}
@@ -91,7 +100,6 @@ export default function HomePage() {
             <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-200">
               🎓 Trusted by 2000+ KIIT Students
             </Badge>
-
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Your Gateway to
@@ -99,12 +107,10 @@ export default function HomePage() {
               <br />
               <span className="text-gray-900">KIIT Academic Excellence</span>
             </h1>
-
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Access premium study notes, authentic teacher reviews, and connect with fellow KIIT students. Everything
               you need to excel in your academic journey at KIIT University.
             </p>
-
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/register">
                 <Button
@@ -165,7 +171,6 @@ export default function HomePage() {
               Comprehensive tools and resources designed specifically for KIIT University students
             </p>
           </motion.div>
-
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
@@ -249,7 +254,6 @@ export default function HomePage() {
               </p>
               <p className="text-gray-500 text-sm">© 2024 KIITease. All rights reserved.</p>
             </div>
-
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
@@ -275,7 +279,6 @@ export default function HomePage() {
                 </li>
               </ul>
             </div>
-
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
@@ -299,5 +302,6 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
+
