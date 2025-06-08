@@ -20,7 +20,13 @@ interface Message {
 }
 
 interface LiveChatProps {
-  user: any
+  user: {
+    id: string
+    role: "free" | "paid"
+    name?: string
+    email?: string
+    [key: string]: any
+  }
 }
 
 export default function LiveChat({ user }: LiveChatProps) {
@@ -34,14 +40,23 @@ export default function LiveChat({ user }: LiveChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
+  // Scroll chat to the bottom when messages change
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
-
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
+  // Start chat when chat is opened and not yet connected
+  const openChat = () => {
+    setIsOpen(true)
+    if (!isConnected) {
+      initializeChat()
+    }
+  }
+
+  // Initialize chat (creates ticket, sets welcome message)
   const initializeChat = async () => {
     try {
       const response = await fetch("/api/support/chat/init", {
@@ -55,7 +70,6 @@ export default function LiveChat({ user }: LiveChatProps) {
         setTicketId(data.ticketId)
         setIsConnected(true)
 
-        // Add welcome message
         const welcomeMessage: Message = {
           id: "welcome",
           content:
@@ -66,6 +80,8 @@ export default function LiveChat({ user }: LiveChatProps) {
           timestamp: new Date(),
         }
         setMessages([welcomeMessage])
+      } else {
+        throw new Error("Failed to connect")
       }
     } catch (error) {
       toast({
@@ -76,6 +92,7 @@ export default function LiveChat({ user }: LiveChatProps) {
     }
   }
 
+  // Send user message to backend and show in chat
   const sendMessage = async () => {
     if (!newMessage.trim() || !ticketId) return
 
@@ -96,17 +113,18 @@ export default function LiveChat({ user }: LiveChatProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticketId,
-          message: newMessage,
+          message: userMessage.content,
           userId: user.id,
         }),
       })
 
       const data = await response.json()
       if (data.success) {
-        // Update message status
-        setMessages((prev) => prev.map((msg) => (msg.id === userMessage.id ? { ...msg, status: "delivered" } : msg)))
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === userMessage.id ? { ...msg, status: "delivered" } : msg))
+        )
 
-        // If admin is available and user is premium, show typing indicator
+        // Simulate admin quick response for premium users if admin available
         if (user.role === "paid" && data.adminAvailable) {
           setTimeout(() => {
             const adminResponse: Message = {
@@ -129,17 +147,11 @@ export default function LiveChat({ user }: LiveChatProps) {
     }
   }
 
+  // Handle Enter (without Shift) to send message
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
-    }
-  }
-
-  const openChat = () => {
-    setIsOpen(true)
-    if (!isConnected) {
-      initializeChat()
     }
   }
 
@@ -158,6 +170,7 @@ export default function LiveChat({ user }: LiveChatProps) {
               onClick={openChat}
               className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
               size="sm"
+              aria-label="Open live chat"
             >
               <MessageCircle className="h-6 w-6" />
             </Button>
@@ -203,6 +216,7 @@ export default function LiveChat({ user }: LiveChatProps) {
                       size="sm"
                       onClick={() => setIsMinimized(!isMinimized)}
                       className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                      aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
                     >
                       {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
                     </Button>
@@ -211,6 +225,7 @@ export default function LiveChat({ user }: LiveChatProps) {
                       size="sm"
                       onClick={() => setIsOpen(false)}
                       className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                      aria-label="Close chat"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -254,7 +269,9 @@ export default function LiveChat({ user }: LiveChatProps) {
                           <p className="text-sm">{message.content}</p>
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-xs opacity-75">
-                              {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              {message.timestamp instanceof Date
+                                ? message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                                : new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </span>
                             {message.sender === "user" && message.status && (
                               <div className="flex items-center space-x-1">
@@ -286,6 +303,7 @@ export default function LiveChat({ user }: LiveChatProps) {
                         disabled={!newMessage.trim() || !isConnected}
                         className="bg-blue-600 hover:bg-blue-700"
                         size="sm"
+                        aria-label="Send message"
                       >
                         <Send className="h-4 w-4" />
                       </Button>
