@@ -118,12 +118,12 @@ async function checkPaymentIntegrity(db: any): Promise<PaymentIntegrityCheck> {
     db.collection("referrals").find().toArray(),
   ])
 
-  const completedOrders = orders.filter((o) => o.status === "completed")
-  const failedOrders = orders.filter((o) => o.status === "failed")
+  const completedOrders = orders.filter((o: any) => o.status === "completed")
+  const failedOrders = orders.filter((o: any) => o.status === "failed")
 
   // Check for orphaned records (paid users without payment orders)
   const paidUsersWithoutOrders = users.filter(
-    (user) => !completedOrders.some((order) => order.userId.toString() === user._id.toString()),
+    (user: any) => !completedOrders.some((order: any) => order.userId?.toString() === user._id?.toString()),
   )
 
   const integrityScore = Math.max(0, 100 - paidUsersWithoutOrders.length * 10)
@@ -146,27 +146,27 @@ async function checkSecurityStatus(db: any): Promise<SecurityStatus> {
   ])
 
   // Check auth methods used
-  const authMethods = []
-  if (users.some((u) => u.googleId)) authMethods.push("Google OAuth")
-  if (users.some((u) => u.password)) authMethods.push("Password")
+  const authMethods: string[] = []
+  if (users.some((u: any) => u.googleId)) authMethods.push("Google OAuth")
+  if (users.some((u: any) => u.password)) authMethods.push("Password")
   if (otps > 0) authMethods.push("OTP")
 
   const securityFeatures = [
     auditLogs > 0, // Audit logging
-    rateLimits >= 0, // Rate limiting setup
-    otps >= 0, // OTP system
+    rateLimits > 0, // Rate limiting setup
+    otps > 0, // OTP system
     authMethods.length >= 2, // Multiple auth methods
-    users.every((u) => u.emailVerified !== false), // Email verification
+    users.every((u: any) => u.emailVerified !== false), // Email verification
   ]
 
   const securityScore = (securityFeatures.filter(Boolean).length / securityFeatures.length) * 100
 
   return {
     authMethods,
-    encryptionStatus: true, // MongoDB connection encryption
+    encryptionStatus: true, // Assume MongoDB connection encryption is enabled
     auditLogging: auditLogs > 0,
-    rateLimiting: true,
-    otpSecurity: otps >= 0,
+    rateLimiting: rateLimits > 0,
+    otpSecurity: otps > 0,
     securityScore,
   }
 }
@@ -176,7 +176,7 @@ function generateRecommendations(
   payment: PaymentIntegrityCheck,
   security: SecurityStatus,
 ): string[] {
-  const recommendations = []
+  const recommendations: string[] = []
 
   // Collection recommendations
   const errorCollections = collections.filter((c) => c.status === "error")
