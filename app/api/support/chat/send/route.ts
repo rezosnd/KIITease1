@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email-service"
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
     const user = await verifyAuth(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       {
         $push: { messages: messageObj },
         $set: { updatedAt: new Date(), status: "awaiting_response" },
-      },
+      }
     )
 
     // Check if admin is available for premium users
