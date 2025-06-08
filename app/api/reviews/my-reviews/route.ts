@@ -4,6 +4,7 @@ import { getAuthUser, toObjectId } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate the user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const db = await getDatabase()
 
-    // Get user's reviews with teacher information
+    // Aggregate user's reviews with teacher information
     const reviews = await db
       .collection("reviews")
       .aggregate([
