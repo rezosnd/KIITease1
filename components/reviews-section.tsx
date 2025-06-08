@@ -49,13 +49,16 @@ export default function ReviewsSection({ user }: ReviewsSectionProps) {
 
   useEffect(() => {
     fetchReviews()
+    // eslint-disable-next-line
   }, [])
 
   useEffect(() => {
     filterReviews()
+    // eslint-disable-next-line
   }, [reviews, searchTerm, selectedBranch, selectedRating])
 
   const fetchReviews = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/reviews")
       if (response.ok) {
@@ -80,7 +83,7 @@ export default function ReviewsSection({ user }: ReviewsSectionProps) {
       filtered = filtered.filter(
         (review) =>
           review.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          review.subject.toLowerCase().includes(searchTerm.toLowerCase()),
+          review.subject.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -302,7 +305,15 @@ export default function ReviewsSection({ user }: ReviewsSectionProps) {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button variant="outline" onClick={() => setSearchTerm("")} className="w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("")
+                  setSelectedBranch("all")
+                  setSelectedRating("all")
+                }}
+                className="w-full"
+              >
                 <Filter className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
