@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -13,72 +12,91 @@ interface OTPInputProps {
 }
 
 export function OTPInput({ length = 6, onComplete, className }: OTPInputProps) {
-  const [otp, setOtp] = useState<string[]>(new Array(length).fill(""))
+  const [otp, setOtp] = useState<string[]>(() => Array(length).fill(""))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  // Focus the first input on mount
   useEffect(() => {
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus()
-    }
+    inputRefs.current[0]?.focus()
   }, [])
 
+  // Helper for moving focus
+  const focusInput = (idx: number) => {
+    inputRefs.current[idx]?.focus()
+    inputRefs.current[idx]?.select()
+  }
+
   const handleChange = (index: number, value: string) => {
-    if (isNaN(Number(value))) return
+    if (value && isNaN(Number(value))) return
 
     const newOtp = [...otp]
-    newOtp[index] = value.substring(value.length - 1)
+    newOtp[index] = value.slice(-1)
     setOtp(newOtp)
 
-    // Move to next input if current field is filled
-    if (value && index < length - 1 && inputRefs.current[index + 1]) {
-      inputRefs.current[index + 1]?.focus()
+    // Move to next input if a number is entered
+    if (value && index < length - 1) {
+      focusInput(index + 1)
     }
 
-    // Call onComplete when all fields are filled
-    const otpValue = newOtp.join("")
-    if (otpValue.length === length) {
-      onComplete(otpValue)
+    // Complete if every field has a digit
+    if (newOtp.every((digit) => digit && !isNaN(Number(digit)))) {
+      onComplete(newOtp.join(""))
     }
   }
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
-      inputRefs.current[index - 1]?.focus()
+    if (e.key === "Backspace") {
+      if (otp[index]) {
+        // Clear current
+        const newOtp = [...otp]
+        newOtp[index] = ""
+        setOtp(newOtp)
+      } else if (index > 0) {
+        // Move to previous
+        focusInput(index - 1)
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      focusInput(index - 1)
+    } else if (e.key === "ArrowRight" && index < length - 1) {
+      focusInput(index + 1)
     }
   }
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault()
-    const pasteData = e.clipboardData.getData("text/plain")
-    const pasteValues = pasteData.slice(0, length).split("")
+    const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, length)
+    if (!pasteData) return
 
-    if (pasteValues.every((val) => !isNaN(Number(val)))) {
-      const newOtp = [...otp]
-      pasteValues.forEach((val, idx) => {
-        if (idx < length) newOtp[idx] = val
-      })
-      setOtp(newOtp)
+    const pasteArr = pasteData.split("")
+    const newOtp = [...otp]
+    for (let i = 0; i < pasteArr.length && i < length; i++) {
+      newOtp[i] = pasteArr[i]
+    }
+    setOtp(newOtp)
+    focusInput(Math.min(pasteArr.length, length - 1))
 
-      if (pasteValues.length === length) {
-        onComplete(pasteValues.join(""))
-      }
+    if (pasteArr.length === length) {
+      onComplete(pasteArr.join(""))
     }
   }
 
   return (
     <div className={cn("flex gap-2 justify-center", className)}>
-      {otp.map((value, index) => (
+      {Array.from({ length }).map((_, index) => (
         <Input
           key={index}
           ref={(el) => (inputRefs.current[index] = el)}
           type="text"
           inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="one-time-code"
           maxLength={1}
-          value={value}
+          value={otp[index]}
           onChange={(e) => handleChange(index, e.target.value)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
-          className="w-12 h-12 text-center text-lg font-semibold"
+          className="w-12 h-12 text-center text-lg font-semibold tracking-widest"
+          aria-label={`OTP digit ${index + 1}`}
         />
       ))}
     </div>
