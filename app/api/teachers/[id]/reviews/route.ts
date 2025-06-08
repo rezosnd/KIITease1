@@ -3,8 +3,12 @@ import { getDatabase } from "@/lib/mongodb"
 import { getAuthUser, toObjectId } from "@/lib/auth"
 import { cache, CACHE_KEYS } from "@/lib/cache"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
+    // Authenticate user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       ])
       .toArray()
 
-    // Cache for 5 minutes
+    // Cache for 5 minutes (300 seconds)
     cache.set(CACHE_KEYS.REVIEWS_LIST(teacherId), reviews, 300)
 
     return NextResponse.json({ reviews })
