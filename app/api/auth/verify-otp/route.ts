@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Registration data expired. Please start again." }, { status: 400 })
       }
 
-      // Create user account
-      const passwordHash = hashPassword(pendingReg.password)
+      // Hash password (ensure await if hashPassword is async)
+      const passwordHash = await hashPassword(pendingReg.password)
       const userReferralCode = generateReferralCode()
 
       // Handle referral
