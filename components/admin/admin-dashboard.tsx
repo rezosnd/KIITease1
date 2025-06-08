@@ -32,7 +32,12 @@ import AdminEmailSettings from "@/components/admin/admin-email-settings"
 import AdminSystemSettings from "@/components/admin/admin-system-settings"
 
 interface AdminDashboardProps {
-  user: any
+  user: {
+    name: string
+    email: string
+    role: string
+    // ...other fields
+  }
   stats: {
     totalUsers: number
     paidUsers: number
@@ -40,9 +45,23 @@ interface AdminDashboardProps {
     totalReviews: number
     conversionRate: string
   }
-  recentUsers: any[]
-  recentPayments: any[]
-  refundEligibleUsers: any[]
+  recentUsers: {
+    _id: string
+    name: string
+    email: string
+    role: string
+  }[]
+  recentPayments: {
+    _id: string
+    orderId: string
+    createdAt: string
+    amount: number
+  }[]
+  refundEligibleUsers: {
+    _id: string
+    name: string
+    email: string
+  }[]
 }
 
 export default function AdminDashboard({
@@ -74,7 +93,6 @@ export default function AdminDashboard({
           title: "Success",
           description: "Refund processed successfully",
         })
-        // Refresh the data
         router.refresh()
       } else {
         const data = await response.json()
