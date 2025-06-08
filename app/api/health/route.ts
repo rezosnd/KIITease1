@@ -9,7 +9,6 @@ export async function GET() {
 
     // Check environment variables
     const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "GMAIL_USER", "GMAIL_APP_PASSWORD"]
-
     const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar])
 
     const health = {
