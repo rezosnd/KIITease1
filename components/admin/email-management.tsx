@@ -40,7 +40,7 @@ interface Announcement {
   createdAt: string
 }
 
-export function EmailManagement() {
+export default function EmailManagement() {
   const [stats, setStats] = useState<EmailStats | null>(null)
   const [recentEmails, setRecentEmails] = useState<RecentEmail[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
@@ -56,9 +56,11 @@ export function EmailManagement() {
 
   useEffect(() => {
     fetchEmailStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchEmailStats = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/email-stats")
       const data = await response.json()
@@ -69,7 +71,11 @@ export function EmailManagement() {
         setAnnouncements(data.announcements)
       }
     } catch (error) {
-      console.error("Failed to fetch email stats:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch email stats",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
