@@ -2,21 +2,26 @@ import { getDatabase } from "@/lib/mongodb"
 import { sendEmail } from "@/lib/email-service"
 import { render } from "@react-email/render"
 import OTPEmail from "@/emails/otp-email"
+import { logger } from "@/lib/logger"
 
+/**
+ * Generate a 6-digit OTP as a string.
+ */
 export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
+/**
+ * Store a new OTP for an email and type, deleting any old ones.
+ */
 export async function storeOTP(email: string, otp: string, type: string): Promise<void> {
   const db = await getDatabase()
 
-  // Remove any existing OTPs for this email and type
   await db.collection("otps").deleteMany({
     email: email.toLowerCase(),
     type,
   })
 
-  // Store new OTP
   await db.collection("otps").insertOne({
     email: email.toLowerCase(),
     otp,
@@ -27,6 +32,9 @@ export async function storeOTP(email: string, otp: string, type: string): Promis
   })
 }
 
+/**
+ * Verify the OTP for given email and type.
+ */
 export async function verifyOTP(
   email: string,
   otp: string,
@@ -64,6 +72,9 @@ export async function verifyOTP(
   return { valid: true }
 }
 
+/**
+ * Rate limit OTP requests per email (max 3 per minute).
+ */
 export async function checkOTPRateLimit(email: string): Promise<{
   allowed: boolean
   waitTime?: number
@@ -84,18 +95,21 @@ export async function checkOTPRateLimit(email: string): Promise<{
   return { allowed: true }
 }
 
+/**
+ * Send an OTP email using the OTPEmail React template.
+ */
 export async function sendOTPEmail(
   email: string,
   name: string,
   otp: string,
-  type: string,
+  type: "registration" | "login" | "password-reset",
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const emailHtml = render(
       OTPEmail({
         name,
         otp,
-        type: type as "registration" | "login" | "password-reset",
+        type,
       }),
     )
 
@@ -103,8 +117,8 @@ export async function sendOTPEmail(
       type === "registration"
         ? "🎓 Complete Your KIITease Registration"
         : type === "login"
-          ? "🔐 Your KIITease Login Code"
-          : "🔒 Reset Your KIITease Password"
+        ? "🔐 Your KIITease Login Code"
+        : "🔒 Reset Your KIITease Password"
 
     const result = await sendEmail({
       to: email,
@@ -123,9 +137,15 @@ export async function sendOTPEmail(
       error: result.error || null,
     })
 
+    if (result.success) {
+      logger.info("OTP email sent", { email, type })
+    } else {
+      logger.error("OTP email send failed", { email, type, error: result.error })
+    }
+
     return result
-  } catch (error) {
-    console.error("Send OTP email error:", error)
+  } catch (error: any) {
+    logger.error("Send OTP email error", error)
     return { success: false, error: "Failed to send email" }
   }
 }
