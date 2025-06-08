@@ -287,7 +287,12 @@ async function setupCompleteDatabase() {
     await db.createCollection("email_logs")
     await db
       .collection("email_logs")
-      .createIndexes([{ key: { sentAt: 1 } }, { key: { recipients: 1 } }, { key: { type: 1 } }, { key: { status: 1 } }])
+      .createIndexes([
+        { key: { sentAt: 1 } },
+        { key: { recipients: 1 } },
+        { key: { type: 1 } },
+        { key: { status: 1 } },
+      ])
 
     // 11. NOTIFICATIONS COLLECTION
     console.log("🔔 Creating notifications collection...")
@@ -296,7 +301,7 @@ async function setupCompleteDatabase() {
       .collection("notifications")
       .createIndexes([
         { key: { userId: 1, createdAt: -1 } },
-        { key: { isRead: 1 } },
+        { key: { read: 1 } },
         { key: { type: 1 } },
         { key: { createdAt: -1 } },
       ])
@@ -313,7 +318,7 @@ async function setupCompleteDatabase() {
             paymentOrderId: { bsonType: "objectId" },
             amount: { bsonType: "number", minimum: 0 },
             reason: { bsonType: "string" },
-            status: { bsonType: "string", enum: ["requested", "approved", "processed", "rejected"] },
+            status: { bsonType: "string", enum: ["requested", "approved", "processed", "rejected", "processing"] },
             processedBy: { bsonType: "objectId" },
             processedAt: { bsonType: "date" },
             refundId: { bsonType: "string" },
@@ -337,6 +342,18 @@ async function setupCompleteDatabase() {
     console.log("⚙️ Creating system_settings collection...")
     await db.createCollection("system_settings")
     await db.collection("system_settings").createIndex({ key: 1 }, { unique: true })
+
+    // 14. SECURITY LOGS COLLECTION
+    console.log("🔒 Creating security_logs collection...")
+    await db.createCollection("security_logs")
+    await db
+      .collection("security_logs")
+      .createIndexes([
+        { key: { type: 1 } },
+        { key: { userId: 1 } },
+        { key: { ip: 1 } },
+        { key: { timestamp: -1 } },
+      ])
 
     console.log("✅ All collections created successfully!")
     console.log("📊 Database setup completed!")
