@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -26,31 +26,22 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const initialized = useRef(false)
 
-  const handleGoogleAuth = async () => {
-    setIsLoading(true)
-
-    try {
-      // Initialize Google Sign-In
-      if (!window.google) {
-        toast({
-          title: "Error",
-          description: "Google Sign-In not loaded. Please refresh the page.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      const response = await new Promise((resolve, reject) => {
-        window.google.accounts.id.initialize({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-          callback: resolve,
-          error_callback: reject,
-        })
-
-        window.google.accounts.id.prompt()
+  useEffect(() => {
+    if (window.google && !initialized.current) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
       })
+      initialized.current = true
+    }
+    // eslint-disable-next-line
+  }, [])
 
+  const handleCredentialResponse = async (response: any) => {
+    setIsLoading(true)
+    try {
       if (!response || !response.credential) {
         throw new Error("No credential received from Google")
       }
@@ -94,12 +85,26 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
     }
   }
 
+  const handleGoogleAuth = () => {
+    if (!window.google) {
+      toast({
+        title: "Error",
+        description: "Google Sign-In not loaded. Please refresh the page.",
+        variant: "destructive",
+      })
+      return
+    }
+    setIsLoading(true)
+    window.google.accounts.id.prompt()
+  }
+
   return (
     <Button type="button" variant="outline" className="w-full" onClick={handleGoogleAuth} disabled={isLoading}>
       {isLoading ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          {/* Google G icon paths */}
           <path
             fill="currentColor"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -122,3 +127,4 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
     </Button>
   )
 }
+
