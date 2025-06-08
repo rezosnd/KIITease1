@@ -2,23 +2,26 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { SkeletonLoader } from "@/components/ui/skeleton-loader"
 import { useToast } from "@/hooks/use-toast"
 import { RefreshCw, CheckCircle, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function AdminRefundsList() {
-  const [refunds, setRefunds] = useState([])
+  const [refunds, setRefunds] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const [processingId, setProcessingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRefunds()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchRefunds = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/refunds")
       const data = await response.json()
@@ -34,9 +37,10 @@ export default function AdminRefundsList() {
     }
   }
 
-  const processRefund = async (userId: string, action: "approve" | "reject") => {
+  const processRefund = async (refundId: string, action: "approve" | "reject") => {
+    setProcessingId(refundId)
     try {
-      const response = await fetch(`/api/admin/refunds/${userId}`, {
+      const response = await fetch(`/api/admin/refunds/${refundId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
@@ -49,7 +53,12 @@ export default function AdminRefundsList() {
         })
         fetchRefunds()
       } else {
-        throw new Error(`Failed to ${action} refund`)
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || `Failed to ${action} refund`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -57,6 +66,8 @@ export default function AdminRefundsList() {
         description: `Failed to ${action} refund`,
         variant: "destructive",
       })
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -97,7 +108,7 @@ export default function AdminRefundsList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {refunds.map((refund: any) => (
+                  {refunds.map((refund) => (
                     <TableRow key={refund._id}>
                       <TableCell>
                         <div>
@@ -121,11 +132,11 @@ export default function AdminRefundsList() {
                                 : "bg-red-100 text-red-800"
                           }
                         >
-                          {refund.refundStatus.toUpperCase()}
+                          {refund.refundStatus?.toUpperCase() || "UNKNOWN"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{new Date(refund.updatedAt).toLocaleDateString()}</div>
+                        <div className="text-sm">{refund.updatedAt ? new Date(refund.updatedAt).toLocaleDateString() : ""}</div>
                       </TableCell>
                       <TableCell>
                         {refund.refundStatus === "eligible" && (
@@ -134,6 +145,7 @@ export default function AdminRefundsList() {
                               size="sm"
                               onClick={() => processRefund(refund._id, "approve")}
                               className="bg-green-600 hover:bg-green-700"
+                              disabled={processingId === refund._id}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Approve
@@ -143,6 +155,7 @@ export default function AdminRefundsList() {
                               variant="outline"
                               onClick={() => processRefund(refund._id, "reject")}
                               className="hover:bg-red-50 hover:text-red-600"
+                              disabled={processingId === refund._id}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
                               Reject
