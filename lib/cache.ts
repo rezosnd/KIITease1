@@ -1,12 +1,18 @@
-// Simple in-memory cache (use Redis in production)
+// Simple in-memory cache for development. Switch to Redis or similar for production!
 class MemoryCache {
   private cache = new Map<string, { value: any; expiry: number }>()
 
+  /**
+   * Set a value in the cache with an optional TTL (in seconds, default 300).
+   */
   set(key: string, value: any, ttlSeconds = 300) {
     const expiry = Date.now() + ttlSeconds * 1000
     this.cache.set(key, { value, expiry })
   }
 
+  /**
+   * Get a value from the cache. Returns null if not found or expired.
+   */
   get(key: string): any | null {
     const item = this.cache.get(key)
     if (!item) return null
@@ -19,16 +25,24 @@ class MemoryCache {
     return item.value
   }
 
-  delete(key: string) {
+  /**
+   * Delete a value from the cache.
+   */
+  delete(key: string): void {
     this.cache.delete(key)
   }
 
-  clear() {
+  /**
+   * Clear the entire cache.
+   */
+  clear(): void {
     this.cache.clear()
   }
 
-  // Clean expired entries
-  cleanup() {
+  /**
+   * Clean up all expired entries.
+   */
+  cleanup(): void {
     const now = Date.now()
     for (const [key, item] of this.cache.entries()) {
       if (now > item.expiry) {
@@ -40,12 +54,12 @@ class MemoryCache {
 
 export const cache = new MemoryCache()
 
-// Cleanup expired entries every 5 minutes
+// Automatically clean up expired cache entries every 5 minutes (server-side only)
 if (typeof window === "undefined") {
   setInterval(() => cache.cleanup(), 5 * 60 * 1000)
 }
 
-// Cache keys
+// Common cache keys, helps prevent typos and enables autocomplete
 export const CACHE_KEYS = {
   USER_PROFILE: (userId: string) => `user:${userId}`,
   NOTES_LIST: (branch: string, year: number) => `notes:${branch}:${year}`,
