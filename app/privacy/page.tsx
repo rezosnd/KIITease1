@@ -12,63 +12,63 @@ export default function PrivacyPage() {
       title: "Information We Collect",
       icon: Database,
       content: `We collect the following information:
-      • Personal Information: Name, email address, academic details (branch, year)
-      • Account Information: Login credentials, referral codes
-      • Payment Information: Processed securely through Razorpay (we don't store card details)
-      • Usage Data: How you interact with our platform
-      • Device Information: Browser type, IP address, device identifiers`,
+• Personal Information: Name, email address, academic details (branch, year)
+• Account Information: Login credentials, referral codes
+• Payment Information: Processed securely through Razorpay (we don't store card details)
+• Usage Data: How you interact with our platform
+• Device Information: Browser type, IP address, device identifiers`,
     },
     {
       title: "How We Use Your Information",
       icon: Eye,
       content: `Your information is used to:
-      • Provide and maintain our services
-      • Process payments and manage subscriptions
-      • Send important notifications and updates
-      • Improve our platform and user experience
-      • Provide customer support
-      • Prevent fraud and ensure security`,
+• Provide and maintain our services
+• Process payments and manage subscriptions
+• Send important notifications and updates
+• Improve our platform and user experience
+• Provide customer support
+• Prevent fraud and ensure security`,
     },
     {
       title: "Information Sharing",
       icon: Shield,
       content: `We do not sell, trade, or rent your personal information. We may share information only:
-      • With Razorpay for payment processing
-      • With Google for OAuth authentication (if you choose)
-      • When required by law or legal process
-      • To protect our rights and prevent fraud
-      • With your explicit consent`,
+• With Razorpay for payment processing
+• With Google for OAuth authentication (if you choose)
+• When required by law or legal process
+• To protect our rights and prevent fraud
+• With your explicit consent`,
     },
     {
       title: "Data Security",
       icon: Lock,
       content: `We implement security measures including:
-      • Encrypted data transmission (HTTPS)
-      • Secure password hashing (bcrypt)
-      • Regular security audits and monitoring
-      • Limited access to personal data
-      • Secure cloud infrastructure (MongoDB Atlas)`,
+• Encrypted data transmission (HTTPS)
+• Secure password hashing (bcrypt)
+• Regular security audits and monitoring
+• Limited access to personal data
+• Secure cloud infrastructure (MongoDB Atlas)`,
     },
     {
       title: "Cookies and Tracking",
       icon: Cookie,
       content: `We use cookies for:
-      • Authentication and session management
-      • Remembering your preferences
-      • Analytics to improve our service
-      • Security and fraud prevention
-      You can control cookies through your browser settings.`,
+• Authentication and session management
+• Remembering your preferences
+• Analytics to improve our service
+• Security and fraud prevention
+You can control cookies through your browser settings.`,
     },
     {
       title: "Your Rights",
       icon: Shield,
       content: `You have the right to:
-      • Access your personal data
-      • Correct inaccurate information
-      • Delete your account and data
-      • Export your data
-      • Opt-out of marketing communications
-      • File complaints with data protection authorities`,
+• Access your personal data
+• Correct inaccurate information
+• Delete your account and data
+• Export your data
+• Opt-out of marketing communications
+• File complaints with data protection authorities`,
     },
   ]
 
