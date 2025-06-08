@@ -13,8 +13,8 @@ export const registerSchema = z.object({
     .min(8)
     .max(128)
     .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      "Password must contain uppercase, lowercase, number and special character",
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+      "Password must contain uppercase, lowercase, number and special character"
     ),
   branch: z.enum(["CSE", "ECE", "ME", "CE", "EE", "IT"]),
   year: z.number().int().min(1).max(4),
@@ -40,7 +40,10 @@ export const noteUploadSchema = z.object({
   year: z.number().int().min(1).max(4),
 })
 
-// Sanitize HTML content
+/**
+ * Sanitize HTML content by removing scripts, iframes, javascript: and inline event handlers.
+ * This is a basic sanitizer. For stricter security, use a library like DOMPurify on the frontend.
+ */
 export function sanitizeHtml(html: string): string {
   return html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
@@ -49,7 +52,10 @@ export function sanitizeHtml(html: string): string {
     .replace(/on\w+\s*=/gi, "")
 }
 
-// Validate file uploads
+/**
+ * Validate file upload for allowed types and size.
+ * Only PDF and DOC/DOCX files allowed, max 10MB.
+ */
 export function validateFileUpload(file: File): { valid: boolean; error?: string } {
   const allowedTypes = [
     "application/pdf",
