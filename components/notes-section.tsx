@@ -51,13 +51,16 @@ export default function NotesSection({ user }: NotesSectionProps) {
 
   useEffect(() => {
     fetchNotes()
+    // eslint-disable-next-line
   }, [])
 
   useEffect(() => {
     filterNotes()
+    // eslint-disable-next-line
   }, [notes, searchTerm, selectedBranch, selectedYear])
 
   const fetchNotes = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/notes")
       if (response.ok) {
@@ -83,7 +86,7 @@ export default function NotesSection({ user }: NotesSectionProps) {
         (note) =>
           note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           note.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          note.description.toLowerCase().includes(searchTerm.toLowerCase()),
+          note.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -176,6 +179,8 @@ export default function NotesSection({ user }: NotesSectionProps) {
           title: "Success",
           description: "Note downloaded successfully",
         })
+      } else {
+        throw new Error("Download failed")
       }
     } catch (error) {
       toast({
@@ -355,7 +360,7 @@ export default function NotesSection({ user }: NotesSectionProps) {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button variant="outline" onClick={() => setSearchTerm("")} className="w-full">
+              <Button variant="outline" onClick={() => { setSearchTerm(""); setSelectedBranch("all"); setSelectedYear("all"); }} className="w-full">
                 <Filter className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
