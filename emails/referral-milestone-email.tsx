@@ -1,4 +1,15 @@
-import { Body, Container, Head, Heading, Html, Img, Link, Preview, Section, Text } from "@react-email/components"
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components"
 
 interface ReferralMilestoneEmailProps {
   name: string
@@ -30,8 +41,10 @@ export const ReferralMilestoneEmail = ({ name, count }: ReferralMilestoneEmailPr
 
           <Section style={isComplete ? successBox : milestoneBox}>
             <Text style={isComplete ? successText : milestoneText}>
-              <span style={emoji}>{isComplete ? "🏆" : "🚀"}</span>
-              {isComplete ? "You've successfully referred 20 friends!" : `You've referred ${count} out of 20 friends!`}
+              <span style={emoji as React.CSSProperties}>{isComplete ? "🏆" : "🚀"}</span>
+              {isComplete
+                ? "You've successfully referred 20 friends!"
+                : `You've referred ${count} out of 20 friends!`}
             </Text>
           </Section>
 
@@ -104,12 +117,12 @@ export const ReferralMilestoneEmail = ({ name, count }: ReferralMilestoneEmailPr
 }
 
 // Styles
-const main = {
+const main: React.CSSProperties = {
   backgroundColor: "#f6f9fc",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 }
 
-const container = {
+const container: React.CSSProperties = {
   margin: "0 auto",
   padding: "40px 20px",
   backgroundColor: "#ffffff",
@@ -120,32 +133,32 @@ const container = {
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
 }
 
-const logo = {
+const logo: React.CSSProperties = {
   margin: "0 auto",
   marginBottom: "20px",
   display: "block",
 }
 
-const heading = {
+const heading: React.CSSProperties = {
   fontSize: "24px",
   fontWeight: "bold",
-  textAlign: "center" as const,
+  textAlign: "center",
   margin: "30px 0",
   color: "#4f46e5",
 }
 
-const section = {
+const section: React.CSSProperties = {
   margin: "30px 0",
 }
 
-const text = {
+const text: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
   marginBottom: "16px",
 }
 
-const successBox = {
+const successBox: React.CSSProperties = {
   backgroundColor: "#ecfdf5",
   borderRadius: "6px",
   padding: "16px",
@@ -153,15 +166,15 @@ const successBox = {
   border: "1px solid #d1fae5",
 }
 
-const successText = {
+const successText: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: "bold",
   color: "#047857",
   margin: "0",
-  textAlign: "center" as const,
+  textAlign: "center",
 }
 
-const milestoneBox = {
+const milestoneBox: React.CSSProperties = {
   backgroundColor: "#eff6ff",
   borderRadius: "6px",
   padding: "16px",
@@ -169,37 +182,37 @@ const milestoneBox = {
   border: "1px solid #dbeafe",
 }
 
-const milestoneText = {
+const milestoneText: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: "bold",
   color: "#1e40af",
   margin: "0",
-  textAlign: "center" as const,
+  textAlign: "center",
 }
 
-const emoji = {
+const emoji: React.CSSProperties = {
   fontSize: "24px",
   marginRight: "8px",
 }
 
-const buttonContainer = {
-  textAlign: "center" as const,
+const buttonContainer: React.CSSProperties = {
+  textAlign: "center",
   margin: "30px 0",
 }
 
-const button = {
+const button: React.CSSProperties = {
   backgroundColor: "#4f46e5",
   borderRadius: "4px",
   color: "#fff",
   fontSize: "16px",
   fontWeight: "bold",
   textDecoration: "none",
-  textAlign: "center" as const,
+  textAlign: "center",
   display: "inline-block",
   padding: "12px 24px",
 }
 
-const tipBox = {
+const tipBox: React.CSSProperties = {
   backgroundColor: "#fef3c7",
   borderRadius: "6px",
   padding: "16px",
@@ -207,7 +220,7 @@ const tipBox = {
   border: "1px solid #fde68a",
 }
 
-const tipHeading = {
+const tipHeading: React.CSSProperties = {
   fontSize: "16px",
   fontWeight: "bold",
   color: "#92400e",
@@ -215,16 +228,16 @@ const tipHeading = {
   marginBottom: "10px",
 }
 
-const tipItem = {
+const tipItem: React.CSSProperties = {
   fontSize: "14px",
   lineHeight: "22px",
   color: "#92400e",
   marginBottom: "6px",
 }
 
-const footer = {
+const footer: React.CSSProperties = {
   fontSize: "14px",
   color: "#898989",
-  textAlign: "center" as const,
+  textAlign: "center",
   marginTop: "30px",
 }
