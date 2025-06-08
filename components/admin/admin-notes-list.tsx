@@ -11,16 +11,19 @@ import { useToast } from "@/hooks/use-toast"
 import { Upload, Download, Trash2, Search } from "lucide-react"
 
 export default function AdminNotesList() {
-  const [notes, setNotes] = useState([])
+  const [notes, setNotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
+  const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => {
     fetchNotes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchNotes = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/notes")
       const data = await response.json()
@@ -51,7 +54,12 @@ export default function AdminNotesList() {
         })
         fetchNotes()
       } else {
-        throw new Error("Failed to delete note")
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete note",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -62,10 +70,35 @@ export default function AdminNotesList() {
     }
   }
 
+  const downloadNote = async (note: any) => {
+    setDownloading(note._id)
+    try {
+      const response = await fetch(`/api/admin/notes/${note._id}/download`)
+      if (!response.ok) throw new Error("Download failed")
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = note.fileName || `${note.title}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download note",
+        variant: "destructive",
+      })
+    } finally {
+      setDownloading(null)
+    }
+  }
+
   const filteredNotes = notes.filter(
-    (note: any) =>
-      note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.subject.toLowerCase().includes(searchTerm.toLowerCase()),
+    (note) =>
+      note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.subject?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -116,7 +149,14 @@ export default function AdminNotesList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredNotes.map((note: any) => (
+                  {filteredNotes.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                        No notes found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {filteredNotes.map((note) => (
                     <TableRow key={note._id}>
                       <TableCell>
                         <div className="font-medium">{note.title}</div>
@@ -134,11 +174,16 @@ export default function AdminNotesList() {
                         <div className="text-sm">{note.uploadedBy?.name || "Admin"}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{new Date(note.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm">{note.createdAt ? new Date(note.createdAt).toLocaleDateString() : ""}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadNote(note)}
+                            disabled={downloading === note._id}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                           <Button
