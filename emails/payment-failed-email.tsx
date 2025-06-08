@@ -1,4 +1,15 @@
-import { Body, Container, Head, Heading, Html, Img, Link, Preview, Section, Text } from "@react-email/components"
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components"
 
 interface PaymentFailedEmailProps {
   name: string
@@ -23,7 +34,7 @@ export const PaymentFailedEmail = ({ name, amount }: PaymentFailedEmailProps) =>
 
           <Section style={errorBox}>
             <Text style={errorText}>
-              <span style={errorIcon}>⚠️</span> Your payment of ₹{amount} could not be processed
+              <span style={errorIcon as React.CSSProperties}>⚠️</span> Your payment of ₹{amount} could not be processed
             </Text>
           </Section>
 
@@ -76,7 +87,7 @@ export const PaymentFailedEmail = ({ name, amount }: PaymentFailedEmailProps) =>
             <Link href="https://eduplatform.vercel.app/terms" style={footerLink}>
               Terms of Service
             </Link>{" "}
-            •
+            •{" "}
             <Link href="https://eduplatform.vercel.app/privacy" style={footerLink}>
               Privacy Policy
             </Link>
@@ -88,12 +99,12 @@ export const PaymentFailedEmail = ({ name, amount }: PaymentFailedEmailProps) =>
 }
 
 // Styles
-const main = {
+const main: React.CSSProperties = {
   backgroundColor: "#f6f9fc",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 }
 
-const container = {
+const container: React.CSSProperties = {
   margin: "0 auto",
   padding: "40px 20px",
   backgroundColor: "#ffffff",
@@ -104,32 +115,32 @@ const container = {
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
 }
 
-const logo = {
+const logo: React.CSSProperties = {
   margin: "0 auto",
   marginBottom: "20px",
   display: "block",
 }
 
-const heading = {
+const heading: React.CSSProperties = {
   fontSize: "24px",
   fontWeight: "bold",
-  textAlign: "center" as const,
+  textAlign: "center",
   margin: "30px 0",
   color: "#ef4444",
 }
 
-const section = {
+const section: React.CSSProperties = {
   margin: "30px 0",
 }
 
-const text = {
+const text: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
   marginBottom: "16px",
 }
 
-const listItem = {
+const listItem: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "24px",
   color: "#333",
@@ -137,7 +148,7 @@ const listItem = {
   paddingLeft: "10px",
 }
 
-const errorBox = {
+const errorBox: React.CSSProperties = {
   backgroundColor: "#fef2f2",
   borderRadius: "6px",
   padding: "16px",
@@ -145,48 +156,48 @@ const errorBox = {
   border: "1px solid #fee2e2",
 }
 
-const errorText = {
+const errorText: React.CSSProperties = {
   fontSize: "16px",
   color: "#b91c1c",
   margin: "0",
-  textAlign: "center" as const,
+  textAlign: "center",
 }
 
-const errorIcon = {
+const errorIcon: React.CSSProperties = {
   fontSize: "20px",
   marginRight: "8px",
 }
 
-const buttonContainer = {
-  textAlign: "center" as const,
+const buttonContainer: React.CSSProperties = {
+  textAlign: "center",
   margin: "30px 0",
 }
 
-const button = {
+const button: React.CSSProperties = {
   backgroundColor: "#4f46e5",
   borderRadius: "4px",
   color: "#fff",
   fontSize: "16px",
   fontWeight: "bold",
   textDecoration: "none",
-  textAlign: "center" as const,
+  textAlign: "center",
   display: "inline-block",
   padding: "12px 24px",
 }
 
-const link = {
+const link: React.CSSProperties = {
   color: "#4f46e5",
   textDecoration: "underline",
 }
 
-const footer = {
+const footer: React.CSSProperties = {
   fontSize: "14px",
   color: "#898989",
-  textAlign: "center" as const,
+  textAlign: "center",
   marginTop: "30px",
 }
 
-const footerLink = {
+const footerLink: React.CSSProperties = {
   color: "#898989",
   textDecoration: "underline",
   margin: "0 5px",
