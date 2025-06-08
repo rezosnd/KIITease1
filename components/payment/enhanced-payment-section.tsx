@@ -11,18 +11,37 @@ import { useToast } from "@/hooks/use-toast"
 import { CreditCard, Check, Star, Zap, Crown, Gift, Users, Wallet, Copy } from "lucide-react"
 
 interface EnhancedPaymentSectionProps {
-  user: any
+  user: {
+    role: "free" | "paid"
+    name: string
+    email: string
+    [key: string]: any
+  }
+}
+
+declare global {
+  interface Window {
+    Razorpay: any
+  }
 }
 
 export default function EnhancedPaymentSection({ user }: EnhancedPaymentSectionProps) {
   const [loading, setLoading] = useState(false)
   const [referralCode, setReferralCode] = useState("")
-  const [referralStats, setReferralStats] = useState(null)
+  const [referralStats, setReferralStats] = useState<any>(null)
   const { toast } = useToast()
 
-  // Load referral stats
+  // Razorpay script loader (only if not present)
   useEffect(() => {
+    if (!window.Razorpay) {
+      const script = document.createElement("script")
+      script.src = "https://checkout.razorpay.com/v1/checkout.js"
+      script.async = true
+      document.body.appendChild(script)
+    }
+    // Load referral stats on mount
     loadReferralStats()
+    // eslint-disable-next-line
   }, [])
 
   const loadReferralStats = async () => {
@@ -104,6 +123,7 @@ export default function EnhancedPaymentSection({ user }: EnhancedPaymentSectionP
               description: "Please contact support if amount was deducted",
               variant: "destructive",
             })
+            setLoading(false)
           }
         },
         prefill: {
@@ -120,7 +140,7 @@ export default function EnhancedPaymentSection({ user }: EnhancedPaymentSectionP
         },
       }
 
-      const razorpay = new (window as any).Razorpay(options)
+      const razorpay = new window.Razorpay(options)
       razorpay.open()
     } catch (error) {
       toast({
@@ -157,11 +177,13 @@ export default function EnhancedPaymentSection({ user }: EnhancedPaymentSectionP
   }
 
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralStats?.referralCode || "")
-    toast({
-      title: "Copied! 📋",
-      description: "Referral code copied to clipboard",
-    })
+    if (referralStats?.referralCode) {
+      navigator.clipboard.writeText(referralStats.referralCode)
+      toast({
+        title: "Copied! 📋",
+        description: "Referral code copied to clipboard",
+      })
+    }
   }
 
   const features = [
@@ -391,9 +413,6 @@ export default function EnhancedPaymentSection({ user }: EnhancedPaymentSectionP
           </Card>
         </>
       )}
-
-      {/* Razorpay Script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     </div>
   )
 }
