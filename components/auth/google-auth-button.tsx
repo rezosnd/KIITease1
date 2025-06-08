@@ -65,7 +65,8 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
         })
         router.push("/dashboard")
       } else if (data.requiresAdditionalInfo && onRequireAdditionalInfo) {
-        onRequireAdditionalInfo(data.googleUser)
+        // FIX: Pass token to callback so it is preserved for next step
+        onRequireAdditionalInfo({ ...data.googleUser, token: response.credential })
       } else {
         toast({
           title: "Error",
