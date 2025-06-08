@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Root Variables and Color System ===== */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -29,6 +30,10 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    /* New: Soft shadow, overlay, and glass colors for industrial UI */
+    --shadow-lg: 0 8px 30px rgba(60,72,88,0.14);
+    --glass-white: rgba(255,255,255,0.18);
+    --glass-dark: rgba(30,41,59,0.60);
   }
 
   .dark {
@@ -56,128 +61,181 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.24);
+    --glass-white: rgba(45,55,72,0.26);
+    --glass-dark: rgba(17,24,39,0.72);
   }
 }
 
+/* ===== Base Styles and Typography ===== */
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased leading-relaxed;
+    min-height: 100vh;
+    transition: background 0.25s, color 0.25s;
+    font-feature-settings: "calt" 1;
+    font-variant-ligatures: common-ligatures;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+  a {
+    @apply text-primary underline underline-offset-2 transition-colors;
+    &:hover, &:focus {
+      @apply text-blue-700;
+    }
   }
 }
 
-/* Custom animations */
+/* ===== Industrial-Style Animations ===== */
 @keyframes float {
   0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  100% { transform: translateY(0px);}
+  50% { transform: translateY(-10px);}
 }
-
 @keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
-  }
+  0%,100% { box-shadow: 0 0 5px rgba(59,130,246,0.5);}
+  50% { box-shadow: 0 0 20px rgba(59,130,246,0.8);}
 }
-
 @keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0%   { background-position: 0% 50%;}
+  50%  { background-position: 100% 50%;}
+  100% { background-position: 0% 50%;}
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0;}
+  100% { background-position: 200% 0;}
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
+.animate-float        { animation: float 3s ease-in-out infinite;}
+.animate-pulse-glow   { animation: pulse-glow 2s ease-in-out infinite;}
+.animate-gradient     { background-size: 200% 200%; animation: gradient-shift 3s ease infinite;}
+.loading-shimmer      { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite;}
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 3s ease infinite;
-}
-
-/* Glassmorphism effect */
+/* ===== Glassmorphism Card Effect ===== */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-white);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.21);
+  box-shadow: var(--shadow-lg);
+}
+.dark .glass {
+  background: var(--glass-dark);
+  border: 1px solid rgba(45,55,72,0.26);
 }
 
-/* Smooth scrollbar */
+/* ===== Elevation and Shadow for UI Depth ===== */
+.elevation-card {
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius);
+}
+.elevation-hover:hover, .elevation-hover:focus {
+  box-shadow: 0 12px 40px rgba(30,41,59,0.22);
+}
+
+/* ===== Scrollbar Styling (Modern, Subtle) ===== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: #f4f7fa;
+  border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #c7d2fe;
+  border-radius: 4px;
+  transition: background 0.2s;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #6366f1;
 }
 
-/* Text selection */
+/* ===== Text Selection ===== */
 ::selection {
-  background-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.15);
   color: inherit;
 }
 
-/* Focus styles */
+/* ===== Focus Ring for Accessibility ===== */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
 
-/* Loading states */
-.loading-shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+/* ===== Button Customizations ===== */
+.btn-industrial {
+  @apply px-5 py-2 rounded-md font-medium bg-primary text-primary-foreground shadow transition duration-200;
+  letter-spacing: 0.02em;
+}
+.btn-industrial:hover, .btn-industrial:focus {
+  @apply bg-blue-700;
+  box-shadow: 0 2px 10px 0 rgba(59,130,246,0.18);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+/* ===== Inputs/Forms ===== */
+input, textarea, select {
+  @apply transition-colors duration-200 border-input rounded-md;
+  background: transparent;
+}
+input:focus, textarea:focus, select:focus {
+  @apply border-blue-500 ring-2 ring-blue-300;
+  outline: none;
 }
 
-/* Mobile optimizations */
+/* ===== Card and Popover Styles ===== */
+.card-industrial {
+  @apply rounded-xl shadow bg-card border border-border;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.card-industrial:hover, .card-industrial:focus-within {
+  box-shadow: 0 8px 32px rgba(60,72,88,0.17);
+  border-color: #6366f1;
+}
+
+/* ===== Mobile Optimizations ===== */
 @media (max-width: 768px) {
   .mobile-optimized {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    font-size: 1rem;
+    border-radius: 0.6rem;
+    padding: 0.85rem 1.1rem;
   }
 }
 
-/* Print styles */
+/* ===== Print Styles ===== */
 @media print {
   .no-print {
     display: none !important;
   }
+}
+
+/* ===== Utility: Hide scrollbar but allow scroll ===== */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== Utility: Custom container for section layouts ===== */
+.section-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* ===== Utility: Responsive font for headings ===== */
+.heading-responsive {
+  font-size: clamp(1.5rem, 2vw + 1.5rem, 2.6rem);
+  line-height: 1.1;
+}
+
+/* ===== Utility: Icon button ===== */
+.icon-btn {
+  @apply bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-2 transition-colors;
+  box-shadow: 0 1px 3px rgba(60,72,88,0.13);
 }
