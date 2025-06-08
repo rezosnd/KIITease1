@@ -28,6 +28,7 @@ export default function NotificationCenter() {
     if (isOpen) {
       fetchNotifications()
     }
+    // eslint-disable-next-line
   }, [isOpen])
 
   const fetchNotifications = async () => {
@@ -55,6 +56,20 @@ export default function NotificationCenter() {
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      const unread = notifications.filter((n) => !n.read)
+      await Promise.all(unread.map((n) => fetch(`/api/notifications/${n._id}/read`, { method: "PATCH" })))
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark all as read",
         variant: "destructive",
       })
     }
@@ -118,7 +133,10 @@ export default function NotificationCenter() {
                           className={`p-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer ${
                             !notification.read ? "bg-blue-50" : ""
                           }`}
-                          onClick={() => !notification.read && markAsRead(notification._id)}
+                          onClick={() => {
+                            if (!notification.read) markAsRead(notification._id)
+                            if (notification.actionUrl) window.open(notification.actionUrl, "_blank")
+                          }}
                         >
                           <div className="flex items-start gap-3">
                             {getIcon(notification.type)}
@@ -159,10 +177,8 @@ export default function NotificationCenter() {
                       variant="ghost"
                       size="sm"
                       className="w-full text-xs"
-                      onClick={() => {
-                        // Mark all as read
-                        notifications.forEach((n) => !n.read && markAsRead(n._id))
-                      }}
+                      onClick={markAllAsRead}
+                      disabled={notifications.every((n) => n.read)}
                     >
                       Mark all as read
                     </Button>
