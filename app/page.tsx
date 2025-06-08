@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,15 +16,44 @@ import {
   FileText,
   Award,
   Zap,
+  Mail,
+  Shield,
+  Info,
+  Phone,
+  ScrollText,
 } from "lucide-react";
 
 export default function HomePage() {
-  const [stats] = useState({
-    totalUsers: 2000,
-    totalNotes: 500,
-    totalReviews: 1200,
-    averageRating: 4.5,
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalNotes: 0,
+    totalReviews: 0,
+    averageRating: 0,
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        setStats({
+          totalUsers: data.totalUsers,
+          totalNotes: data.totalNotes,
+          totalReviews: data.totalReviews,
+          averageRating: data.averageRating,
+        });
+        setLoading(false);
+      })
+      .catch(() => {
+        setStats({
+          totalUsers: 0,
+          totalNotes: 0,
+          totalReviews: 0,
+          averageRating: 0,
+        });
+        setLoading(false);
+      });
+  }, []);
 
   const features = [
     {
@@ -98,7 +127,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-200">
-              🎓 Trusted by 2000+ KIIT Students
+              🎓 Trusted by {loading ? "..." : stats.totalUsers.toLocaleString()}+ KIIT Students
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -136,10 +165,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: "Active Students", value: "2000+", icon: <Users className="h-6 w-6" /> },
-              { label: "Study Notes", value: "500+", icon: <FileText className="h-6 w-6" /> },
-              { label: "Teacher Reviews", value: "1200+", icon: <Star className="h-6 w-6" /> },
-              { label: "Average Rating", value: "4.5★", icon: <TrendingUp className="h-6 w-6" /> },
+              { label: "Active Students", value: loading ? "..." : `${stats.totalUsers.toLocaleString()}+`, icon: <Users className="h-6 w-6" /> },
+              { label: "Study Notes", value: loading ? "..." : `${stats.totalNotes.toLocaleString()}+`, icon: <FileText className="h-6 w-6" /> },
+              { label: "Teacher Reviews", value: loading ? "..." : `${stats.totalReviews.toLocaleString()}+`, icon: <Star className="h-6 w-6" /> },
+              { label: "Average Rating", value: loading ? "..." : `${stats.averageRating}★`, icon: <TrendingUp className="h-6 w-6" /> },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -240,6 +269,42 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Legal/Info Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white/80 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+          <div className="flex flex-col items-center text-center">
+            <Info className="h-8 w-8 text-blue-600 mb-2" />
+            <h3 className="font-bold text-lg mb-2">About Us</h3>
+            <p className="text-gray-600 mb-2">
+              KIITease is built by KIIT alumni and students who understand the academic needs of KIITians. Our mission is to empower you with the best resources for your success.
+            </p>
+            <Link href="/about" className="text-blue-600 hover:underline text-sm">
+              Learn more
+            </Link>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <Shield className="h-8 w-8 text-green-600 mb-2" />
+            <h3 className="font-bold text-lg mb-2">Privacy & Safety</h3>
+            <p className="text-gray-600 mb-2">
+              Your data is secure. Read our privacy policy to learn how we protect your information and keep your academic life safe.
+            </p>
+            <Link href="/privacy" className="text-blue-600 hover:underline text-sm">
+              Privacy Policy
+            </Link>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <ScrollText className="h-8 w-8 text-purple-600 mb-2" />
+            <h3 className="font-bold text-lg mb-2">Terms of Service</h3>
+            <p className="text-gray-600 mb-2">
+              By using KIITease, you agree to our community rules and fair use policy. Please read our terms for details.
+            </p>
+            <Link href="/terms" className="text-blue-600 hover:underline text-sm">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -252,7 +317,7 @@ export default function HomePage() {
               <p className="text-gray-400 mb-4 max-w-md">
                 Empowering KIIT University students with premium study resources and authentic teacher reviews.
               </p>
-              <p className="text-gray-500 text-sm">© 2024 KIITease. All rights reserved.</p>
+              <p className="text-gray-500 text-sm">© {new Date().getFullYear()} KIITease. All rights reserved.</p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
@@ -283,18 +348,24 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="mailto:support@kiitease.com" className="hover:text-white transition-colors">
-                    support@kiitease.com
+                  <a href="mailto:support@kiitease.com" className="hover:text-white transition-colors flex items-center">
+                    <Mail className="h-4 w-4 mr-2" /> support@kiitease.com
                   </a>
                 </li>
                 <li>
-                  <span className="text-gray-500">Help Center</span>
+                  <Link href="/privacy" className="hover:text-white transition-colors flex items-center">
+                    <Shield className="h-4 w-4 mr-2" /> Privacy Policy
+                  </Link>
                 </li>
                 <li>
-                  <span className="text-gray-500">Privacy Policy</span>
+                  <Link href="/terms" className="hover:text-white transition-colors flex items-center">
+                    <ScrollText className="h-4 w-4 mr-2" /> Terms of Service
+                  </Link>
                 </li>
                 <li>
-                  <span className="text-gray-500">Terms of Service</span>
+                  <Link href="/contact" className="hover:text-white transition-colors flex items-center">
+                    <Phone className="h-4 w-4 mr-2" /> Contact
+                  </Link>
                 </li>
               </ul>
             </div>
