@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +23,30 @@ export default function AdminSystemSettings() {
     razorpayKeySecret: "",
   })
   const [loading, setLoading] = useState(false)
+  const [dbAction, setDbAction] = useState("")
+  const [dbStatus, setDbStatus] = useState("Connected to MongoDB. Last backup: Never")
   const { toast } = useToast()
+
+  // Load settings on mount
+  useEffect(() => {
+    fetchSettings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch("/api/admin/system-settings")
+      if (!response.ok) throw new Error("Failed to load settings")
+      const data = await response.json()
+      if (data.settings) setSettings(data.settings)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load system settings",
+        variant: "destructive",
+      })
+    }
+  }
 
   const handleSaveSettings = async () => {
     setLoading(true)
@@ -50,6 +73,34 @@ export default function AdminSystemSettings() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Database management actions (backup/optimize/clear cache)
+  const handleDbAction = async (action: "backup" | "optimize" | "clear") => {
+    setDbAction(action)
+    try {
+      const response = await fetch(`/api/admin/database?action=${action}`, { method: "POST" })
+      const data = await response.json()
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: data.message || `Database ${action} successful`,
+        })
+        if (action === "backup" && data.lastBackup) {
+          setDbStatus(`Connected to MongoDB. Last backup: ${data.lastBackup}`)
+        }
+      } else {
+        throw new Error(data.error || `Failed to ${action} database`)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${action} database`,
+        variant: "destructive",
+      })
+    } finally {
+      setDbAction("")
     }
   }
 
@@ -204,24 +255,39 @@ export default function AdminSystemSettings() {
             <CardDescription>Database maintenance and backup</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleDbAction("backup")}
+              disabled={dbAction === "backup"}
+            >
               <Database className="h-4 w-4 mr-2" />
-              Backup Database
+              {dbAction === "backup" ? "Backing up..." : "Backup Database"}
             </Button>
 
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleDbAction("optimize")}
+              disabled={dbAction === "optimize"}
+            >
               <Database className="h-4 w-4 mr-2" />
-              Optimize Database
+              {dbAction === "optimize" ? "Optimizing..." : "Optimize Database"}
             </Button>
 
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleDbAction("clear")}
+              disabled={dbAction === "clear"}
+            >
               <Database className="h-4 w-4 mr-2" />
-              Clear Cache
+              {dbAction === "clear" ? "Clearing..." : "Clear Cache"}
             </Button>
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium text-blue-800 mb-2">Database Status:</h4>
-              <p className="text-sm text-blue-700">Connected to MongoDB. Last backup: Never</p>
+              <p className="text-sm text-blue-700">{dbStatus}</p>
             </div>
           </CardContent>
         </Card>
