@@ -16,6 +16,7 @@ export default function DatabaseHealthDashboard() {
 
   useEffect(() => {
     checkHealth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkHealth = async () => {
@@ -26,8 +27,11 @@ export default function DatabaseHealthDashboard() {
         const data = await response.json()
         setHealth(data.health)
         setLastChecked(data.timestamp)
+      } else {
+        setHealth(null)
       }
     } catch (error) {
+      setHealth(null)
       console.error("Failed to check database health:", error)
     } finally {
       setLoading(false)
