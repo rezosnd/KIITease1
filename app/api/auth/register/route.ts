@@ -13,14 +13,14 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase()
 
-    // Check if user exists
-    const existingUser = await db.collection("users").findOne({ email })
+    // Check if user exists (case-insensitive)
+    const existingUser = await db.collection("users").findOne({ email: email.toLowerCase() })
     if (existingUser) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 })
     }
 
     // Hash password and generate referral code
-    const passwordHash = hashPassword(password)
+    const passwordHash = await hashPassword(password)
     const userReferralCode = generateReferralCode()
 
     // Handle referral
