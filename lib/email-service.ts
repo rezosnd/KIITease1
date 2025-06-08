@@ -8,23 +8,23 @@ import { PasswordResetEmail } from "@/emails/password-reset-email"
 import { BulkAnnouncementEmail } from "@/emails/bulk-announcement-email"
 import { getDatabase } from "@/lib/mongodb"
 
-// Enhanced transporter with better configuration
+// Create and verify transporter (Gmail SMTP, connection pooling, rate limiting)
 const createTransporter = async () => {
-  const transporter = nodemailer.createTransporter({
+  // Nodemailer does not have createTransporter, it is createTransport
+  const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD,
     },
     secure: true,
-    pool: true, // Enable connection pooling
-    maxConnections: 5, // Limit concurrent connections
-    maxMessages: 100, // Limit messages per connection
-    rateDelta: 1000, // Rate limiting
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 1000, // ms
     rateLimit: 5, // Max 5 emails per second
   })
 
-  // Verify transporter
   try {
     await transporter.verify()
     console.log("✅ Email transporter verified successfully")
@@ -75,7 +75,7 @@ export async function sendEmail({
     })
 
     return { success: true, messageId: info.messageId }
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Email sending failed:", error)
 
     // Log failed email
@@ -120,13 +120,13 @@ async function logEmailSent({
   }
 }
 
-// Bulk email sending with rate limiting
+// Bulk email sending with rate limiting & batching
 export async function sendBulkEmails({
   recipients,
   subject,
   htmlTemplate,
   batchSize = 50,
-  delayBetweenBatches = 5000, // 5 seconds
+  delayBetweenBatches = 5000,
 }: {
   recipients: Array<{ email: string; name: string; [key: string]: any }>
   subject: string
@@ -141,13 +141,11 @@ export async function sendBulkEmails({
     errors: [] as any[],
   }
 
-  // Process in batches
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, i + batchSize)
 
     console.log(`📧 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(recipients.length / batchSize)}`)
 
-    // Send emails in parallel within batch
     const batchPromises = batch.map(async (recipient) => {
       try {
         const html = htmlTemplate(recipient)
@@ -171,7 +169,6 @@ export async function sendBulkEmails({
 
     await Promise.all(batchPromises)
 
-    // Delay between batches to avoid rate limiting
     if (i + batchSize < recipients.length) {
       console.log(`⏳ Waiting ${delayBetweenBatches}ms before next batch...`)
       await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches))
@@ -228,7 +225,7 @@ export async function sendPasswordResetEmail(user: { name: string; email: string
   })
 }
 
-// Mass announcement email
+// Mass announcement email to users by role
 export async function sendAnnouncementToAll({
   title,
   message,
@@ -243,7 +240,6 @@ export async function sendAnnouncementToAll({
   try {
     const db = await getDatabase()
 
-    // Build query based on target audience
     let query = {}
     if (targetAudience === "free") {
       query = { role: "free" }
@@ -253,21 +249,18 @@ export async function sendAnnouncementToAll({
       query = { role: "admin" }
     }
 
-    // Get all users matching criteria
     const users = await db.collection("users").find(query).toArray()
 
     if (users.length === 0) {
       return { success: false, error: "No users found for the target audience" }
     }
 
-    // Prepare recipients
-    const recipients = users.map((user) => ({
+    const recipients = users.map((user: any) => ({
       email: user.email,
       name: user.name,
       role: user.role,
     }))
 
-    // Send bulk emails
     const results = await sendBulkEmails({
       recipients,
       subject: title,
@@ -281,7 +274,6 @@ export async function sendAnnouncementToAll({
         ),
     })
 
-    // Log the announcement
     await db.collection("announcements").insertOne({
       title,
       message,
