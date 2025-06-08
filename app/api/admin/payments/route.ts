@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate admin user
     const user = await getAuthUser(request)
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     const db = await getDatabase()
 
+    // Aggregate payments with user info
     const payments = await db
       .collection("payment_orders")
       .aggregate([
@@ -22,23 +24,21 @@ export async function GET(request: NextRequest) {
             as: "user",
           },
         },
-        {
-          $unwind: "$user",
-        },
+        { $unwind: "$user" },
         {
           $project: {
+            _id: 1,
             orderId: 1,
             paymentId: 1,
             amount: 1,
             status: 1,
             createdAt: 1,
+            "user._id": 1,
             "user.name": 1,
             "user.email": 1,
           },
         },
-        {
-          $sort: { createdAt: -1 },
-        },
+        { $sort: { createdAt: -1 } },
       ])
       .toArray()
 
