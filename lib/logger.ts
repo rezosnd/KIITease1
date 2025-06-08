@@ -38,16 +38,29 @@ class Logger {
 
     // Console output in development
     if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
       console.log(`[${entry.level}] ${entry.message}`, entry.meta || "")
     }
 
     // File output in production
     if (process.env.NODE_ENV === "production") {
-      fs.appendFileSync(logFile, logLine)
+      try {
+        fs.appendFileSync(logFile, logLine)
+      } catch (err) {
+        // Fallback: log to console if file write fails
+        // eslint-disable-next-line no-console
+        console.error("[LOGGER ERROR] Failed to write log file:", err)
+        // eslint-disable-next-line no-console
+        console.log(logLine)
+      }
     }
   }
 
-  error(message: string, meta?: any, context?: { userId?: string; ip?: string; userAgent?: string }) {
+  error(
+    message: string,
+    meta?: any,
+    context?: { userId?: string; ip?: string; userAgent?: string }
+  ) {
     this.writeLog({
       timestamp: new Date().toISOString(),
       level: LogLevel.ERROR,
@@ -57,7 +70,11 @@ class Logger {
     })
   }
 
-  warn(message: string, meta?: any, context?: { userId?: string; ip?: string; userAgent?: string }) {
+  warn(
+    message: string,
+    meta?: any,
+    context?: { userId?: string; ip?: string; userAgent?: string }
+  ) {
     this.writeLog({
       timestamp: new Date().toISOString(),
       level: LogLevel.WARN,
@@ -67,7 +84,11 @@ class Logger {
     })
   }
 
-  info(message: string, meta?: any, context?: { userId?: string; ip?: string; userAgent?: string }) {
+  info(
+    message: string,
+    meta?: any,
+    context?: { userId?: string; ip?: string; userAgent?: string }
+  ) {
     this.writeLog({
       timestamp: new Date().toISOString(),
       level: LogLevel.INFO,
@@ -77,7 +98,11 @@ class Logger {
     })
   }
 
-  debug(message: string, meta?: any, context?: { userId?: string; ip?: string; userAgent?: string }) {
+  debug(
+    message: string,
+    meta?: any,
+    context?: { userId?: string; ip?: string; userAgent?: string }
+  ) {
     if (process.env.NODE_ENV === "development") {
       this.writeLog({
         timestamp: new Date().toISOString(),
