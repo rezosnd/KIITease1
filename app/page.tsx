@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,36 +24,12 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalNotes: 0,
-    totalReviews: 0,
-    averageRating: 0,
+  const [stats] = useState({
+    totalUsers: 2000,
+    totalNotes: 500,
+    totalReviews: 1200,
+    averageRating: 4.5,
   });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/stats")
-      .then((res) => res.json())
-      .then((data) => {
-        setStats({
-          totalUsers: data.totalUsers,
-          totalNotes: data.totalNotes,
-          totalReviews: data.totalReviews,
-          averageRating: data.averageRating,
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        setStats({
-          totalUsers: 0,
-          totalNotes: 0,
-          totalReviews: 0,
-          averageRating: 0,
-        });
-        setLoading(false);
-      });
-  }, []);
 
   const features = [
     {
@@ -127,7 +103,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-200">
-              🎓 Trusted by {loading ? "..." : stats.totalUsers.toLocaleString()}+ KIIT Students
+              🎓 Trusted by 2000+ KIIT Students
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -165,10 +141,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: "Active Students", value: loading ? "..." : `${stats.totalUsers.toLocaleString()}+`, icon: <Users className="h-6 w-6" /> },
-              { label: "Study Notes", value: loading ? "..." : `${stats.totalNotes.toLocaleString()}+`, icon: <FileText className="h-6 w-6" /> },
-              { label: "Teacher Reviews", value: loading ? "..." : `${stats.totalReviews.toLocaleString()}+`, icon: <Star className="h-6 w-6" /> },
-              { label: "Average Rating", value: loading ? "..." : `${stats.averageRating}★`, icon: <TrendingUp className="h-6 w-6" /> },
+              { label: "Active Students", value: "2000+", icon: <Users className="h-6 w-6" /> },
+              { label: "Study Notes", value: "500+", icon: <FileText className="h-6 w-6" /> },
+              { label: "Teacher Reviews", value: "1200+", icon: <Star className="h-6 w-6" /> },
+              { label: "Average Rating", value: "4.5★", icon: <TrendingUp className="h-6 w-6" /> },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
