@@ -6,14 +6,14 @@ import { cache, CACHE_KEYS } from "@/lib/cache"
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user (any logged-in user can give a review)
     const user = await getAuthUser(request)
-    if (!user || user.role === "free") {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
+    // Parse and validate body
     const body = await request.json()
-
-    // Validate input
     const validationResult = reviewSchema.safeParse({
       teacherId: body.teacherId,
       subject: body.subject,
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase()
 
-    // Check if user already reviewed this teacher for this subject
+    // Prevent duplicate reviews for the same teacher/subject by the same user
     const existingReview = await db.collection("reviews").findOne({
       userId: toObjectId(user.id),
       teacherId: toObjectId(teacherId),
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "You have already reviewed this teacher for this subject" }, { status: 400 })
     }
 
-    // Create review
+    // Create review document
     const review = {
       userId: toObjectId(user.id),
       teacherId: toObjectId(teacherId),
@@ -54,11 +54,11 @@ export async function POST(request: NextRequest) {
 
     const result = await db.collection("reviews").insertOne(review)
 
-    // Clear relevant caches
+    // Invalidate relevant caches
     cache.delete(CACHE_KEYS.REVIEWS_LIST(teacherId))
     cache.delete(CACHE_KEYS.TEACHERS_LIST)
 
-    // Log the review submission
+    // Log this review action
     await db.collection("audit_logs").insertOne({
       userId: toObjectId(user.id),
       action: "review_submitted",
