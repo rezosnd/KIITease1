@@ -41,7 +41,7 @@ type Action =
     }
   | {
       type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
+      toast: Partial<ToasterToast> & { id: string }
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -85,7 +85,9 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
       }
 
     case "DISMISS_TOAST": {
@@ -105,7 +107,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t,
+            : t
         ),
       }
     }
@@ -170,7 +172,7 @@ function useToast() {
       dispatch({ type: "ADD_TOAST", toast: newToast })
       return id
     },
-    [],
+    []
   )
 
   const dismiss = React.useCallback((toastId?: string) => {
@@ -184,7 +186,7 @@ function useToast() {
   }
 }
 
-// Optional: ToastViewport React component to render the toasts visually
+// ToastViewport React component to render the toasts visually
 export function ToastViewport() {
   const { toasts, dismiss } = useToast()
   return (
@@ -243,7 +245,7 @@ export function ToastViewport() {
               Dismiss
             </button>
           </div>
-        ) : null,
+        ) : null
       )}
     </div>
   )
