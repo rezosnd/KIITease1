@@ -28,6 +28,23 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
   const router = useRouter()
   const initialized = useRef(false)
 
+  // Load Google script if not present
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (window.google) return
+
+    // Check if script already exists
+    if (!document.getElementById("google-client-script")) {
+      const script = document.createElement("script")
+      script.src = "https://accounts.google.com/gsi/client"
+      script.async = true
+      script.defer = true
+      script.id = "google-client-script"
+      document.body.appendChild(script)
+    }
+  }, [])
+
+  // Initialize Google button
   useEffect(() => {
     if (window.google && !initialized.current) {
       window.google.accounts.id.initialize({
@@ -37,7 +54,7 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
       initialized.current = true
     }
     // eslint-disable-next-line
-  }, [])
+  }, [typeof window !== "undefined" && window.google])
 
   const handleCredentialResponse = async (response: any) => {
     setIsLoading(true)
@@ -52,6 +69,7 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: response.credential,
+          mode,
           ...additionalData,
         }),
       })
@@ -65,7 +83,6 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
         })
         router.push("/dashboard")
       } else if (data.requiresAdditionalInfo && onRequireAdditionalInfo) {
-        // FIX: Pass token to callback so it is preserved for next step
         onRequireAdditionalInfo({ ...data.googleUser, token: response.credential })
       } else {
         toast({
@@ -100,12 +117,18 @@ export function GoogleAuthButton({ mode, additionalData, onRequireAdditionalInfo
   }
 
   return (
-    <Button type="button" variant="outline" className="w-full" onClick={handleGoogleAuth} disabled={isLoading}>
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full"
+      onClick={handleGoogleAuth}
+      disabled={isLoading}
+      aria-label="Sign in with Google"
+    >
       {isLoading ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-          {/* Google G icon paths */}
           <path
             fill="currentColor"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
