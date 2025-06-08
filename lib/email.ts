@@ -6,49 +6,58 @@ import { PaymentFailedEmail } from "@/emails/payment-failed-email"
 import { ReferralMilestoneEmail } from "@/emails/referral-milestone-email"
 import { PasswordResetEmail } from "@/emails/password-reset-email"
 
-// Create reusable transporter with Gmail
+type SendEmailOptions = {
+  to: string | string[]
+  subject: string
+  html: string
+  attachments?: any[]
+}
+
+// Create reusable transporter with Gmail SMTP (App Password required)
 const createTransporter = async () => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD, // App password, not regular password
+      pass: process.env.GMAIL_APP_PASSWORD,
     },
     secure: true,
   })
-
+  // Optionally verify connection here if desired (await transporter.verify())
   return transporter
 }
 
+/**
+ * Send a single email.
+ */
 export async function sendEmail({
   to,
   subject,
   html,
-}: {
-  to: string
-  subject: string
-  html: string
-}) {
+  attachments = [],
+}: SendEmailOptions) {
   try {
     const transporter = await createTransporter()
-
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"EduPlatform" <${process.env.GMAIL_USER}>`,
-      to,
+      to: Array.isArray(to) ? to.join(", ") : to,
       subject,
       html,
-      text: html.replace(/<[^>]*>/g, ""), // Strip HTML for plain text alternative
-    })
+      text: html.replace(/<[^>]*>/g, ""), // Fallback plain text
+      attachments,
+    }
 
-    console.log(`Email sent: ${info.messageId}`)
+    const info = await transporter.sendMail(mailOptions)
+    console.log(`📧 Email sent: ${info.messageId}`)
     return { success: true, messageId: info.messageId }
-  } catch (error) {
-    console.error("Email sending failed:", error)
-    return { success: false, error }
+  } catch (error: any) {
+    console.error("❌ Email sending failed:", error)
+    return { success: false, error: error.message || error }
   }
 }
 
 // Email sending functions with React Email templates
+
 export async function sendWelcomeEmail(user: { name: string; email: string }) {
   const html = render(WelcomeEmail({ name: user.name }))
   return sendEmail({
