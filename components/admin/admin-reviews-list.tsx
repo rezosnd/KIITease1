@@ -11,16 +11,19 @@ import { useToast } from "@/hooks/use-toast"
 import { Star, Search, Trash2, Eye } from "lucide-react"
 
 export default function AdminReviewsList() {
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReviews()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchReviews = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/reviews")
       const data = await response.json()
@@ -39,6 +42,7 @@ export default function AdminReviewsList() {
   const deleteReview = async (reviewId: string) => {
     if (!confirm("Are you sure you want to delete this review?")) return
 
+    setDeletingId(reviewId)
     try {
       const response = await fetch(`/api/admin/reviews/${reviewId}`, {
         method: "DELETE",
@@ -51,7 +55,12 @@ export default function AdminReviewsList() {
         })
         fetchReviews()
       } else {
-        throw new Error("Failed to delete review")
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete review",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -59,6 +68,8 @@ export default function AdminReviewsList() {
         description: "Failed to delete review",
         variant: "destructive",
       })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -70,8 +81,8 @@ export default function AdminReviewsList() {
 
   const filteredReviews = reviews.filter(
     (review: any) =>
-      review.teacher?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.subject.toLowerCase().includes(searchTerm.toLowerCase()),
+      (review.teacher?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (review.subject?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   )
 
   return (
@@ -118,6 +129,13 @@ export default function AdminReviewsList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {filteredReviews.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                        No reviews found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {filteredReviews.map((review: any) => (
                     <TableRow key={review._id}>
                       <TableCell>
@@ -137,7 +155,7 @@ export default function AdminReviewsList() {
                         <div className="text-sm">{review.user?.name}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{new Date(review.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ""}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -149,6 +167,7 @@ export default function AdminReviewsList() {
                             size="sm"
                             onClick={() => deleteReview(review._id)}
                             className="hover:bg-red-50 hover:text-red-600"
+                            disabled={deletingId === review._id}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
