@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Verify Google token
     const googleUser = await verifyGoogleToken(token)
     if (!googleUser || !googleUser.verified) {
-      return NextResponse.json({ error: "Invalid Google token" }, { status: 400 })
+      return NextResponse.json({ error: "Invalid Google token" }, { status:400 })
     }
 
     const db = await getDatabase()
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: 7 * 24 * 60 * 60,
       })
 
       return response
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
               picture: googleUser.picture,
             },
           },
-          { status: 400 },
+          { status: 400 }
         )
       }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       const newUser = {
         name: googleUser.name,
         email: googleUser.email.toLowerCase(),
-        passwordHash: null, // Google users don't have passwords
+        passwordHash: null,
         branch,
         year: Number.parseInt(year),
         role: "free",
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: 7 * 24 * 60 * 60,
       })
 
       return response
