@@ -26,13 +26,18 @@ interface MyReviewsSectionProps {
 export default function MyReviewsSection({ user }: MyReviewsSectionProps) {
   const [myReviews, setMyReviews] = useState<MyReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editComment, setEditComment] = useState("")
+  const [editRating, setEditRating] = useState<number>(5)
   const { toast } = useToast()
 
   useEffect(() => {
     fetchMyReviews()
+    // eslint-disable-next-line
   }, [])
 
   const fetchMyReviews = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/reviews/my-reviews")
       if (response.ok) {
@@ -76,14 +81,65 @@ export default function MyReviewsSection({ user }: MyReviewsSectionProps) {
     }
   }
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number, interactive = false, onChange?: (r: number) => void) => {
     return (
       <div className="flex space-x-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star key={star} className={`h-4 w-4 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
-        ))}
+        {[1, 2, 3, 4, 5].map((star) =>
+          interactive ? (
+            <span
+              key={star}
+              className={`cursor-pointer ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
+              onClick={() => onChange && onChange(star)}
+            >
+              <Star className={`h-5 w-5 transition`} fill={star <= rating ? "#FACC15" : "none"} />
+            </span>
+          ) : (
+            <Star
+              key={star}
+              className={`h-4 w-4 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+            />
+          )
+        )}
       </div>
     )
+  }
+
+  const handleEdit = (review: MyReview) => {
+    setEditingId(review._id)
+    setEditComment(review.comment)
+    setEditRating(review.rating)
+  }
+
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditComment("")
+    setEditRating(5)
+  }
+
+  const handleEditSave = async (reviewId: string) => {
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: editComment, rating: editRating }),
+      })
+      if (response.ok) {
+        toast({
+          title: "Updated!",
+          description: "Review updated successfully.",
+        })
+        setEditingId(null)
+        fetchMyReviews()
+      } else {
+        throw new Error("Failed to update review")
+      }
+    } catch (error) {
+      toast({
+        title: "Update Error",
+        description: "Could not update review.",
+        variant: "destructive",
+      })
+    }
   }
 
   if (loading) {
@@ -168,16 +224,49 @@ export default function MyReviewsSection({ user }: MyReviewsSectionProps) {
                     </Badge>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-gray-700 text-sm leading-relaxed">{review.comment}</p>
-                  </div>
+                  {editingId === review._id ? (
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <textarea
+                        className="w-full rounded border border-gray-200 p-2 mb-2 text-sm"
+                        value={editComment}
+                        onChange={(e) => setEditComment(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-xs text-gray-500">Rating:</span>
+                        {renderStars(editRating, true, setEditRating)}
+                        <span className="text-xs text-gray-600 font-mono ml-2">{editRating}/5</span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleEditSave(review._id)}
+                        >
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleEditCancel}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-gray-700 text-sm leading-relaxed">{review.comment}</p>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
                       Reviewed on {new Date(review.reviewedAt).toLocaleDateString()}
                     </span>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(review)}
+                        disabled={editingId !== null && editingId !== review._id}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
@@ -186,6 +275,7 @@ export default function MyReviewsSection({ user }: MyReviewsSectionProps) {
                         size="sm"
                         onClick={() => handleDeleteReview(review._id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={editingId !== null}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
