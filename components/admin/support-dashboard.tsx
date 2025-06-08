@@ -10,6 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { MessageSquare, CheckCircle, User, Send, RefreshCw } from "lucide-react"
 
+interface SupportMessage {
+  sender: "user" | "admin"
+  content: string
+  timestamp: string
+}
+
 interface SupportTicket {
   _id: string
   userId: string
@@ -21,7 +27,7 @@ interface SupportTicket {
   category: string
   createdAt: string
   updatedAt: string
-  messages: any[]
+  messages: SupportMessage[]
   assignedAdmin?: string
 }
 
@@ -33,12 +39,16 @@ export default function SupportDashboard() {
   const [priorityFilter, setPriorityFilter] = useState("all")
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const [sending, setSending] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
   useEffect(() => {
     fetchTickets()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, priorityFilter])
 
   const fetchTickets = async () => {
+    setLoading(true)
     try {
       const params = new URLSearchParams()
       if (statusFilter !== "all") params.append("status", statusFilter)
@@ -47,6 +57,10 @@ export default function SupportDashboard() {
       const response = await fetch(`/api/admin/support/tickets?${params}`)
       const data = await response.json()
       setTickets(data.tickets || [])
+      // If the selected ticket is not in the new list, deselect
+      if (selectedTicket && !data.tickets.some((t: SupportTicket) => t._id === selectedTicket._id)) {
+        setSelectedTicket(null)
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -61,6 +75,7 @@ export default function SupportDashboard() {
   const sendReply = async () => {
     if (!newMessage.trim() || !selectedTicket) return
 
+    setSending(true)
     try {
       const response = await fetch("/api/admin/support/reply", {
         method: "POST",
@@ -77,12 +92,14 @@ export default function SupportDashboard() {
           description: "Your reply has been sent to the user",
         })
         setNewMessage("")
-        fetchTickets()
-
-        // Update selected ticket
+        await fetchTickets()
+        // Update selected ticket details
         const updatedResponse = await fetch(`/api/admin/support/tickets/${selectedTicket._id}`)
         const updatedData = await updatedResponse.json()
         setSelectedTicket(updatedData.ticket)
+      } else {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to send reply")
       }
     } catch (error) {
       toast({
@@ -90,10 +107,13 @@ export default function SupportDashboard() {
         description: "Failed to send reply",
         variant: "destructive",
       })
+    } finally {
+      setSending(false)
     }
   }
 
   const updateTicketStatus = async (ticketId: string, status: string) => {
+    setUpdatingStatus(true)
     try {
       const response = await fetch(`/api/admin/support/tickets/${ticketId}`, {
         method: "PATCH",
@@ -106,10 +126,17 @@ export default function SupportDashboard() {
           title: "Status Updated",
           description: `Ticket status changed to ${status}`,
         })
-        fetchTickets()
+        await fetchTickets()
         if (selectedTicket?._id === ticketId) {
           setSelectedTicket({ ...selectedTicket, status: status as any })
         }
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || "Failed to update ticket status",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -117,6 +144,8 @@ export default function SupportDashboard() {
         description: "Failed to update ticket status",
         variant: "destructive",
       })
+    } finally {
+      setUpdatingStatus(false)
     }
   }
 
@@ -154,8 +183,8 @@ export default function SupportDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Support Dashboard</h1>
-        <Button onClick={fetchTickets} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <Button onClick={fetchTickets} variant="outline" disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -204,31 +233,37 @@ export default function SupportDashboard() {
 
           {/* Tickets */}
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {tickets.map((ticket) => (
-              <motion.div key={ticket._id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Card
-                  className={`cursor-pointer transition-colors ${
-                    selectedTicket?._id === ticket._id ? "ring-2 ring-blue-500" : ""
-                  }`}
-                  onClick={() => setSelectedTicket(ticket)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium text-sm">{ticket.userName}</span>
+            {loading ? (
+              <div className="text-center text-gray-500 py-6">Loading tickets...</div>
+            ) : tickets.length === 0 ? (
+              <div className="text-center text-gray-500 py-6">No tickets found.</div>
+            ) : (
+              tickets.map((ticket) => (
+                <motion.div key={ticket._id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Card
+                    className={`cursor-pointer transition-colors ${
+                      selectedTicket?._id === ticket._id ? "ring-2 ring-blue-500" : ""
+                    }`}
+                    onClick={() => setSelectedTicket(ticket)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium text-sm">{ticket.userName}</span>
+                        </div>
+                        <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
                       </div>
-                      <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <Badge className={getStatusColor(ticket.status)}>{ticket.status.replace("_", " ")}</Badge>
-                      <span className="text-xs text-gray-500">{new Date(ticket.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-2">{ticket.messages.length} messages</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      <div className="flex justify-between items-center">
+                        <Badge className={getStatusColor(ticket.status)}>{ticket.status.replace("_", " ")}</Badge>
+                        <span className="text-xs text-gray-500">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">{ticket.messages.length} messages</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 
@@ -251,6 +286,7 @@ export default function SupportDashboard() {
                     <Select
                       value={selectedTicket.status}
                       onValueChange={(value) => updateTicketStatus(selectedTicket._id, value)}
+                      disabled={updatingStatus}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -296,14 +332,15 @@ export default function SupportDashboard() {
                         onClick={() => updateTicketStatus(selectedTicket._id, "resolved")}
                         variant="outline"
                         size="sm"
+                        disabled={updatingStatus}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Mark Resolved
                       </Button>
                     </div>
-                    <Button onClick={sendReply} disabled={!newMessage.trim()}>
+                    <Button onClick={sendReply} disabled={!newMessage.trim() || sending}>
                       <Send className="h-4 w-4 mr-2" />
-                      Send Reply
+                      {sending ? "Sending..." : "Send Reply"}
                     </Button>
                   </div>
                 </div>
