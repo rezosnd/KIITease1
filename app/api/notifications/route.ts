@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Fetch all notifications for the authenticated user
     const notifications = await getUserNotifications(user.id)
 
     return NextResponse.json({ notifications })
