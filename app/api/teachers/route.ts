@@ -5,6 +5,7 @@ import { cache, CACHE_KEYS } from "@/lib/cache"
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       ])
       .toArray()
 
-    // Cache for 10 minutes
+    // Cache for 10 minutes (600 seconds)
     cache.set(CACHE_KEYS.TEACHERS_LIST, teachers, 600)
 
     return NextResponse.json({ teachers })
