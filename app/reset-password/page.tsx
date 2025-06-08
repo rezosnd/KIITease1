@@ -38,12 +38,14 @@ export default function ResetPasswordPage() {
       setValidating(false)
       setTokenValid(false)
     }
+    // eslint-disable-next-line
   }, [token])
 
   useEffect(() => {
     if (formData.password) {
       checkPasswordStrength(formData.password)
     }
+    // eslint-disable-next-line
   }, [formData.password])
 
   const validateToken = async () => {
