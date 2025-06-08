@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     const db = await getDatabase()
     const user = await db.collection("users").findOne({ email: email.toLowerCase() })
 
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    // Check user existence and password validity
+    if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
     })
 
-    // Create response with cookie
+    // Prepare response with auth cookie
     const response = NextResponse.json({
       success: true,
       user: {
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Set HTTP-only cookie
+    // Set secure, httpOnly cookie for 7 days
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
