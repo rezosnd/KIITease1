@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { AnimatedCard } from "@/components/ui/animated-card"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Star, Gift, LogOut, Copy, TrendingUp, GraduationCap } from "lucide-react"
+import { Users, Star, Gift, LogOut, Copy, TrendingUp, GraduationCap, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import NotesSection from "@/components/notes-section"
 import ReviewsSection from "@/components/reviews-section"
@@ -23,18 +24,48 @@ interface DashboardContentProps {
 export default function DashboardContent({ user, userData, referralCount }: DashboardContentProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState({
+    referralCount,
+    refundStatus: userData?.refundStatus,
+    role: user.role,
+    referralCode: userData?.referralCode,
+  })
 
   const handleLogout = async () => {
+    setLoading(true)
     await fetch("/api/auth/logout", { method: "POST" })
+    setLoading(false)
     router.push("/")
   }
 
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(userData?.referralCode || "")
-    toast({
-      title: "Copied! 📋",
-      description: "Referral code copied to clipboard",
-    })
+    if (stats.referralCode) {
+      navigator.clipboard.writeText(stats.referralCode)
+      toast({
+        title: "Copied! 📋",
+        description: "Referral code copied to clipboard",
+      })
+    }
+  }
+
+  const refreshReferralStats = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/referrals/stats")
+      if (response.ok) {
+        const data = await response.json()
+        setStats({
+          referralCount: data.stats.referralCount,
+          refundStatus: data.stats.refundStatus,
+          role: user.role,
+          referralCode: data.stats.referralCode,
+        })
+        toast({ title: "Refreshed!", description: "Referral stats updated." })
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getRoleColor = (role: string) => {
@@ -61,36 +92,58 @@ export default function DashboardContent({ user, userData, referralCount }: Dash
   const statsCards = [
     {
       title: "Your Role",
-      value: user.role,
-      description: user.role === "free" ? "Upgrade to access notes" : "Full access enabled",
+      value: stats.role,
+      description: stats.role === "free" ? "Upgrade to access notes" : "Full access enabled",
       icon: Users,
       color: "text-blue-600",
     },
     {
       title: "Referrals",
-      value: `${referralCount}/20`,
-      description: `${20 - referralCount} more for refund eligibility`,
+      value: `${stats.referralCount}/20`,
+      description: `${20 - stats.referralCount} more for refund eligibility`,
       icon: Gift,
       color: "text-green-600",
+      button: (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={refreshReferralStats}
+          disabled={loading}
+          className="flex items-center space-x-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          <span>Refresh</span>
+        </Button>
+      ),
     },
     {
       title: "Referral Code",
-      value: userData?.referralCode,
+      value: stats.referralCode,
       description: "Share with friends",
       icon: Copy,
       color: "text-purple-600",
       clickable: true,
       onClick: copyReferralCode,
+      button: (
+        <Button variant="outline" size="sm" onClick={copyReferralCode} className="mt-2 h-7 text-xs">
+          Copy Code
+        </Button>
+      ),
     },
     {
       title: "Refund Status",
       value:
-        userData?.refundStatus === "eligible"
+        stats.refundStatus === "eligible"
           ? "Eligible!"
-          : userData?.refundStatus === "issued"
+          : stats.refundStatus === "issued"
             ? "Issued"
             : "Not Eligible",
-      description: userData?.refundStatus === "eligible" ? "Contact admin for refund" : "Complete referrals to qualify",
+      description:
+        stats.refundStatus === "eligible"
+          ? "You can now claim your refund."
+          : stats.refundStatus === "issued"
+            ? "Refund sent to your account."
+            : "Complete referrals to qualify",
       icon: Star,
       color: "text-yellow-600",
     },
@@ -114,11 +167,17 @@ export default function DashboardContent({ user, userData, referralCount }: Dash
               </span>
             </motion.div>
             <div className="flex items-center space-x-4">
-              <Badge className={`${getRoleColor(user.role)} border font-medium`}>{user.role.toUpperCase()}</Badge>
+              <Badge className={`${getRoleColor(stats.role)} border font-medium`}>{stats.role.toUpperCase()}</Badge>
               <span className="text-sm text-gray-600 hidden sm:block">Welcome, {user.name}</span>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-red-50 hover:text-red-600">
-                  <LogOut className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="hover:bg-red-50 hover:text-red-600"
+                  disabled={loading}
+                >
+                  {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                 </Button>
               </motion.div>
             </div>
@@ -155,18 +214,14 @@ export default function DashboardContent({ user, userData, referralCount }: Dash
                   )}
                 </motion.div>
                 <p className="text-xs text-gray-600 mt-1">{card.description}</p>
-                {card.clickable && (
-                  <Button variant="outline" size="sm" onClick={card.onClick} className="mt-2 h-7 text-xs">
-                    Copy Code
-                  </Button>
-                )}
+                {card.button}
               </CardContent>
             </AnimatedCard>
           ))}
         </motion.div>
 
         {/* Progress Bar for Referrals */}
-        {referralCount < 20 && (
+        {stats.referralCount < 20 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -179,19 +234,19 @@ export default function DashboardContent({ user, userData, referralCount }: Dash
                   <TrendingUp className="h-5 w-5 text-blue-600" />
                   Referral Progress
                 </CardTitle>
-                <CardDescription>{20 - referralCount} more referrals needed for refund eligibility</CardDescription>
+                <CardDescription>{20 - stats.referralCount} more referrals needed for refund eligibility</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                   <motion.div
                     className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${(referralCount / 20) * 100}%` }}
+                    animate={{ width: `${(stats.referralCount / 20) * 100}%` }}
                     transition={{ duration: 1, delay: 0.7 }}
                   />
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{referralCount} completed</span>
+                  <span>{stats.referralCount} completed</span>
                   <span>20 target</span>
                 </div>
               </CardContent>
