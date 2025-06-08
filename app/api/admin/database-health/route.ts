@@ -1,11 +1,31 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
-import { checkDatabaseHealth } from "@/lib/database-health"
+import { getDatabase } from "@/lib/mongodb"
+
+// Real database health check: checks connectivity and a simple command
+async function checkDatabaseHealth() {
+  try {
+    const db = await getDatabase()
+    // Example: use the "ping" command for MongoDB
+    const admin = db.admin ? db.admin() : db // for native or mongoose
+    const result = await admin.command({ ping: 1 })
+    return {
+      ok: result.ok === 1,
+      message: "Database is reachable",
+      ...(result.ok === 1 ? {} : { result }),
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      message: "Database is NOT reachable",
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser(request)
-
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
@@ -13,7 +33,7 @@ export async function GET(request: NextRequest) {
     const health = await checkDatabaseHealth()
 
     return NextResponse.json({
-      success: true,
+      success: health.ok,
       health,
       timestamp: new Date().toISOString(),
     })
