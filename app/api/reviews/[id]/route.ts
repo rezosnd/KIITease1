@@ -5,21 +5,24 @@ import { cache, CACHE_KEYS } from "@/lib/cache"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Authenticate user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Parse body
     const body = await request.json()
     const { subject, rating, comment } = body
 
-    if (!subject || !rating || rating < 2 || rating > 5) {
+    // Validate input
+    if (!subject || typeof rating !== "number" || rating < 2 || rating > 5) {
       return NextResponse.json({ error: "Invalid input data" }, { status: 400 })
     }
 
     const db = await getDatabase()
 
-    // Update review (only if it belongs to the user)
+    // Update the review (only if it belongs to the user)
     const result = await db.collection("reviews").updateOne(
       {
         _id: toObjectId(params.id),
@@ -39,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Review not found or unauthorized" }, { status: 404 })
     }
 
-    // Clear caches
+    // Clear teachers list cache
     cache.delete(CACHE_KEYS.TEACHERS_LIST)
 
     return NextResponse.json({ success: true })
@@ -51,6 +54,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Authenticate user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -58,7 +62,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     const db = await getDatabase()
 
-    // Delete review (only if it belongs to the user)
+    // Delete the review (only if it belongs to the user)
     const result = await db.collection("reviews").deleteOne({
       _id: toObjectId(params.id),
       userId: toObjectId(user.id),
@@ -68,7 +72,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Review not found or unauthorized" }, { status: 404 })
     }
 
-    // Clear caches
+    // Clear teachers list cache
     cache.delete(CACHE_KEYS.TEACHERS_LIST)
 
     return NextResponse.json({ success: true })
