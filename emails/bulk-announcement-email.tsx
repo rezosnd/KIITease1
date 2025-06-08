@@ -1,4 +1,15 @@
-import { Body, Container, Head, Heading, Html, Img, Link, Preview, Section, Text } from "@react-email/components"
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components"
 
 interface BulkAnnouncementEmailProps {
   name: string
@@ -6,7 +17,11 @@ interface BulkAnnouncementEmailProps {
   message: string
 }
 
-export const BulkAnnouncementEmail = ({ name, title, message }: BulkAnnouncementEmailProps) => {
+export const BulkAnnouncementEmail = ({
+  name,
+  title,
+  message,
+}: BulkAnnouncementEmailProps) => {
   return (
     <Html>
       <Head />
@@ -34,7 +49,10 @@ export const BulkAnnouncementEmail = ({ name, title, message }: BulkAnnouncement
             <Text style={messageText}>{message}</Text>
 
             <Section style={buttonContainer}>
-              <Link style={button} href="https://eduplatform.vercel.app/dashboard">
+              <Link
+                style={button}
+                href="https://eduplatform.vercel.app/dashboard"
+              >
                 Go to Dashboard
               </Link>
             </Section>
@@ -44,31 +62,45 @@ export const BulkAnnouncementEmail = ({ name, title, message }: BulkAnnouncement
             <Text style={infoTitle}>📚 Quick Links:</Text>
             <Text style={infoItem}>
               •{" "}
-              <Link href="https://eduplatform.vercel.app/dashboard" style={infoLink}>
+              <Link
+                href="https://eduplatform.vercel.app/dashboard"
+                style={infoLink}
+              >
                 Dashboard
               </Link>
             </Text>
             <Text style={infoItem}>
               •{" "}
-              <Link href="https://eduplatform.vercel.app/notes" style={infoLink}>
+              <Link
+                href="https://eduplatform.vercel.app/notes"
+                style={infoLink}
+              >
                 Study Notes
               </Link>
             </Text>
             <Text style={infoItem}>
               •{" "}
-              <Link href="https://eduplatform.vercel.app/reviews" style={infoLink}>
+              <Link
+                href="https://eduplatform.vercel.app/reviews"
+                style={infoLink}
+              >
                 Teacher Reviews
               </Link>
             </Text>
             <Text style={infoItem}>
               •{" "}
-              <Link href="https://eduplatform.vercel.app/support" style={infoLink}>
+              <Link
+                href="https://eduplatform.vercel.app/support"
+                style={infoLink}
+              >
                 Support
               </Link>
             </Text>
           </Section>
 
-          <Text style={text}>If you have any questions, feel free to contact our support team.</Text>
+          <Text style={text}>
+            If you have any questions, feel free to contact our support team.
+          </Text>
 
           <Text style={text}>
             Best regards,
@@ -79,11 +111,17 @@ export const BulkAnnouncementEmail = ({ name, title, message }: BulkAnnouncement
           <Text style={footer}>
             © 2024 EduPlatform. All rights reserved.
             <br />
-            <Link href="https://eduplatform.vercel.app/unsubscribe" style={footerLink}>
+            <Link
+              href="https://eduplatform.vercel.app/unsubscribe"
+              style={footerLink}
+            >
               Unsubscribe
             </Link>{" "}
             •{" "}
-            <Link href="https://eduplatform.vercel.app/privacy" style={footerLink}>
+            <Link
+              href="https://eduplatform.vercel.app/privacy"
+              style={footerLink}
+            >
               Privacy Policy
             </Link>
           </Text>
@@ -94,12 +132,13 @@ export const BulkAnnouncementEmail = ({ name, title, message }: BulkAnnouncement
 }
 
 // Styles
-const main = {
+const main: React.CSSProperties = {
   backgroundColor: "#f6f9fc",
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 }
 
-const container = {
+const container: React.CSSProperties = {
   margin: "0 auto",
   padding: "40px 20px",
   backgroundColor: "#ffffff",
@@ -110,32 +149,32 @@ const container = {
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
 }
 
-const logo = {
+const logo: React.CSSProperties = {
   margin: "0 auto",
   marginBottom: "20px",
   display: "block",
 }
 
-const heading = {
+const heading: React.CSSProperties = {
   fontSize: "24px",
   fontWeight: "bold",
-  textAlign: "center" as const,
+  textAlign: "center",
   margin: "30px 0",
   color: "#4f46e5",
 }
 
-const section = {
+const section: React.CSSProperties = {
   margin: "30px 0",
 }
 
-const greeting = {
+const greeting: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
   marginBottom: "20px",
 }
 
-const messageText = {
+const messageText: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
@@ -146,55 +185,55 @@ const messageText = {
   border: "1px solid #e2e8f0",
 }
 
-const text = {
+const text: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
   marginBottom: "16px",
 }
 
-const announcementBox = {
+const announcementBox: React.CSSProperties = {
   backgroundColor: "#eff6ff",
   borderRadius: "6px",
   padding: "16px",
   marginBottom: "30px",
   border: "1px solid #dbeafe",
-  textAlign: "center" as const,
+  textAlign: "center",
 }
 
-const announcementIcon = {
+const announcementIcon: React.CSSProperties = {
   fontSize: "24px",
   margin: "0",
 }
 
-const announcementLabel = {
+const announcementLabel: React.CSSProperties = {
   fontSize: "14px",
   fontWeight: "bold",
   color: "#1e40af",
   margin: "5px 0 0 0",
-  textTransform: "uppercase" as const,
+  textTransform: "uppercase",
   letterSpacing: "0.5px",
 }
 
-const buttonContainer = {
-  textAlign: "center" as const,
+const buttonContainer: React.CSSProperties = {
+  textAlign: "center",
   margin: "30px 0",
 }
 
-const button = {
+const button: React.CSSProperties = {
   backgroundColor: "#4f46e5",
   borderRadius: "6px",
   color: "#fff",
   fontSize: "16px",
   fontWeight: "bold",
   textDecoration: "none",
-  textAlign: "center" as const,
+  textAlign: "center",
   display: "inline-block",
   padding: "14px 28px",
   boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)",
 }
 
-const infoBox = {
+const infoBox: React.CSSProperties = {
   backgroundColor: "#f0fdf4",
   borderRadius: "6px",
   padding: "16px",
@@ -202,7 +241,7 @@ const infoBox = {
   border: "1px solid #dcfce7",
 }
 
-const infoTitle = {
+const infoTitle: React.CSSProperties = {
   fontSize: "16px",
   fontWeight: "bold",
   color: "#166534",
@@ -210,28 +249,28 @@ const infoTitle = {
   marginBottom: "8px",
 }
 
-const infoItem = {
+const infoItem: React.CSSProperties = {
   fontSize: "14px",
   color: "#166534",
   marginBottom: "4px",
   lineHeight: "20px",
 }
 
-const infoLink = {
+const infoLink: React.CSSProperties = {
   color: "#166534",
   textDecoration: "underline",
 }
 
-const footer = {
+const footer: React.CSSProperties = {
   fontSize: "14px",
   color: "#898989",
-  textAlign: "center" as const,
+  textAlign: "center",
   marginTop: "40px",
   paddingTop: "20px",
   borderTop: "1px solid #e5e7eb",
 }
 
-const footerLink = {
+const footerLink: React.CSSProperties = {
   color: "#898989",
   textDecoration: "underline",
   margin: "0 5px",
