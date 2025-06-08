@@ -8,6 +8,7 @@ export class LiveSupportService {
 
   private constructor() {}
 
+  // Singleton pattern
   public static getInstance(): LiveSupportService {
     if (!LiveSupportService.instance) {
       LiveSupportService.instance = new LiveSupportService()
@@ -15,12 +16,16 @@ export class LiveSupportService {
     return LiveSupportService.instance
   }
 
+  // Must be called before first use!
   async initializeDatabase() {
-    this.db = await getDatabase()
+    if (!this.db) {
+      this.db = await getDatabase()
+    }
   }
 
   // 1. CREATE NEW SUPPORT TICKET
   async createTicket(userId: string, userRole: string) {
+    await this.initializeDatabase()
     const ticket = {
       userId: new ObjectId(userId),
       status: "open",
@@ -61,6 +66,7 @@ export class LiveSupportService {
 
   // 2. ASSIGN ADMIN TO PREMIUM TICKET
   async assignAdminToTicket(ticketId: string) {
+    await this.initializeDatabase()
     // Find available admin with lowest active tickets
     const availableAdmin = await this.db.collection("admin_availability").findOne({
       isOnline: true,
@@ -120,6 +126,7 @@ export class LiveSupportService {
 
   // 3. ADD MESSAGE TO TICKET
   async addMessage(ticketId: string, content: string, sender: "user" | "admin", senderId: string) {
+    await this.initializeDatabase()
     const message = {
       id: new ObjectId(),
       content,
@@ -168,7 +175,7 @@ export class LiveSupportService {
             <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
               <p><strong>Message:</strong> ${content}</p>
             </div>
-            <p><a href="${process.env.NEXTAUTH_URL}/dashboard?tab=support">View Full Conversation</a></p>
+            <p><a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/dashboard?tab=support">View Full Conversation</a></p>
             <p>Best regards,<br>KIITease Support Team</p>
           `,
         })
@@ -191,6 +198,7 @@ export class LiveSupportService {
 
   // 4. RESOLVE TICKET
   async resolveTicket(ticketId: string, adminId: string) {
+    await this.initializeDatabase()
     // Update ticket status
     await this.db.collection("support_tickets").updateOne(
       { _id: new ObjectId(ticketId) },
@@ -240,7 +248,7 @@ export class LiveSupportService {
           <p><strong>Ticket ID:</strong> ${ticketId}</p>
           <p><strong>Resolution Time:</strong> ${new Date().toLocaleString()}</p>
           <p>We hope we were able to help you. If you have any feedback, please let us know!</p>
-          <p><a href="${process.env.NEXTAUTH_URL}/dashboard?tab=support&feedback=${ticketId}">Rate Our Support</a></p>
+          <p><a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/dashboard?tab=support&feedback=${ticketId}">Rate Our Support</a></p>
           <p>Best regards,<br>KIITease Support Team</p>
         `,
       })
@@ -252,11 +260,12 @@ export class LiveSupportService {
 
   // 5. RECORD ANALYTICS
   async recordSupportAnalytics(ticketId: string, adminId: string) {
+    await this.initializeDatabase()
     const ticket = await this.db.collection("support_tickets").findOne({ _id: new ObjectId(ticketId) })
     const session = await this.db.collection("chat_sessions").findOne({ ticketId: new ObjectId(ticketId) })
 
     if (ticket && session) {
-      const responseTime = session.endTime.getTime() - session.startTime.getTime()
+      const responseTime = (session.endTime?.getTime?.() || Date.now()) - (session.startTime?.getTime?.() || Date.now())
       const responseTimeMinutes = Math.floor(responseTime / (1000 * 60))
 
       const today = new Date()
@@ -288,6 +297,7 @@ export class LiveSupportService {
 
   // 6. GET REAL-TIME UPDATES
   async getTicketUpdates(ticketId: string, lastMessageId?: string) {
+    await this.initializeDatabase()
     const ticket = await this.db.collection("support_tickets").findOne({ _id: new ObjectId(ticketId) })
 
     if (!ticket) return null
