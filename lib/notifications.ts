@@ -14,7 +14,12 @@ export interface Notification {
   expiresAt?: Date
 }
 
-export async function createNotification(notification: Omit<Notification, "_id" | "read" | "createdAt">) {
+/**
+ * Create a new notification for a user.
+ */
+export async function createNotification(
+  notification: Omit<Notification, "_id" | "read" | "createdAt">
+) {
   try {
     const db = await getDatabase()
 
@@ -28,12 +33,15 @@ export async function createNotification(notification: Omit<Notification, "_id" 
     logger.info("Notification created", { notificationId: result.insertedId, userId: notification.userId })
 
     return result.insertedId
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Failed to create notification", error)
     throw error
   }
 }
 
+/**
+ * Get recent notifications for a user, excluding expired ones.
+ */
 export async function getUserNotifications(userId: string, limit = 20) {
   try {
     const db = await getDatabase()
@@ -49,22 +57,28 @@ export async function getUserNotifications(userId: string, limit = 20) {
       .toArray()
 
     return notifications
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Failed to get user notifications", error)
     throw error
   }
 }
 
+/**
+ * Mark a notification as read for a given user.
+ */
 export async function markNotificationAsRead(notificationId: string, userId: string) {
   try {
     const db = await getDatabase()
 
     await db
       .collection("notifications")
-      .updateOne({ _id: new ObjectId(notificationId), userId: new ObjectId(userId) }, { $set: { read: true } })
+      .updateOne(
+        { _id: new ObjectId(notificationId), userId: new ObjectId(userId) },
+        { $set: { read: true } }
+      )
 
     logger.info("Notification marked as read", { notificationId, userId })
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Failed to mark notification as read", error)
     throw error
   }
@@ -86,7 +100,11 @@ export const NOTIFICATION_TEMPLATES = {
 
   REFERRAL_MILESTONE: (count: number) => ({
     title: "Referral Milestone! 🌟",
-    message: `Congratulations! You've referred ${count} friends. ${count >= 20 ? "You're eligible for a refund!" : `${20 - count} more to go for refund eligibility.`}`,
+    message: `Congratulations! You've referred ${count} friends. ${
+      count >= 20
+        ? "You're eligible for a refund!"
+        : `${20 - count} more to go for refund eligibility.`
+    }`,
     type: count >= 20 ? ("success" as const) : ("info" as const),
   }),
 
