@@ -25,8 +25,12 @@ export interface PaymentVerification {
   razorpay_signature: string
 }
 
-// Create Razorpay order
-export async function createRazorpayOrder(amount: number, userId: string, referralCode?: string) {
+// Create Razorpay order and store in DB
+export async function createRazorpayOrder(
+  amount: number,
+  userId: string,
+  referralCode?: string
+) {
   try {
     const receipt = `receipt_${Date.now()}_${userId.slice(-6)}`
 
@@ -65,7 +69,7 @@ export async function createRazorpayOrder(amount: number, userId: string, referr
   }
 }
 
-// Verify payment signature
+// Verify Razorpay payment signature
 export function verifyPaymentSignature(verification: PaymentVerification): boolean {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = verification
@@ -83,7 +87,7 @@ export function verifyPaymentSignature(verification: PaymentVerification): boole
   }
 }
 
-// Get payment details from Razorpay
+// Fetch payment details from Razorpay
 export async function getPaymentDetails(paymentId: string) {
   try {
     const payment = await razorpay.payments.fetch(paymentId)
@@ -94,8 +98,11 @@ export async function getPaymentDetails(paymentId: string) {
   }
 }
 
-// Auto-verify payment and process referrals
-export async function processPaymentSuccess(verification: PaymentVerification, userId: string) {
+// Process successful payment, update user, handle referrals, analytics
+export async function processPaymentSuccess(
+  verification: PaymentVerification,
+  userId: string
+) {
   const db = await getDatabase()
   const session = db.client.startSession()
 
@@ -148,7 +155,7 @@ export async function processPaymentSuccess(verification: PaymentVerification, u
         await processReferralReward(order.referralCode, userId, order.amount, session)
       }
 
-      // Log successful payment
+      // Log successful payment to audit log
       await db.collection("audit_logs").insertOne(
         {
           userId: new ObjectId(userId),
@@ -179,8 +186,13 @@ export async function processPaymentSuccess(verification: PaymentVerification, u
   }
 }
 
-// Process referral rewards
-async function processReferralReward(referralCode: string, newUserId: string, amount: number, session: any) {
+// Process referral rewards and milestone notifications
+async function processReferralReward(
+  referralCode: string,
+  newUserId: string,
+  amount: number,
+  session: any
+) {
   const db = await getDatabase()
 
   try {
@@ -193,13 +205,14 @@ async function processReferralReward(referralCode: string, newUserId: string, am
     }
 
     // Create referral record
+    const rewardAmount = Math.floor(amount * 0.1) // 10% referral reward
     await db.collection("referrals").insertOne(
       {
         referrerId: referrer._id,
         referredUserId: new ObjectId(newUserId),
         referralCode,
         status: "completed",
-        rewardAmount: Math.floor(amount * 0.1), // 10% referral reward
+        rewardAmount,
         paymentAmount: amount,
         createdAt: new Date(),
         completedAt: new Date(),
@@ -213,7 +226,7 @@ async function processReferralReward(referralCode: string, newUserId: string, am
       {
         $inc: {
           totalReferrals: 1,
-          totalReferralEarnings: Math.floor(amount * 0.1),
+          totalReferralEarnings: rewardAmount,
         },
         $set: {
           updatedAt: new Date(),
@@ -260,7 +273,7 @@ async function processReferralReward(referralCode: string, newUserId: string, am
       referrerId: referrer._id,
       newUserId,
       referralCount,
-      rewardAmount: Math.floor(amount * 0.1),
+      rewardAmount,
     })
   } catch (error) {
     logger.error("Referral processing failed", error)
@@ -268,7 +281,7 @@ async function processReferralReward(referralCode: string, newUserId: string, am
   }
 }
 
-// Get referral statistics
+// Get referral statistics for a user
 export async function getReferralStats(userId: string) {
   try {
     const db = await getDatabase()
@@ -301,7 +314,7 @@ export async function getReferralStats(userId: string) {
   }
 }
 
-// Auto-refund processing
+// Process auto-refund for eligible users
 export async function processAutoRefund(userId: string) {
   const db = await getDatabase()
   const session = db.client.startSession()
@@ -316,16 +329,18 @@ export async function processAutoRefund(userId: string) {
 
       // Create refund record
       const refundAmount = user.paymentAmount || 499
+      const referralCount = await db.collection("referrals").countDocuments({
+        referrerId: new ObjectId(userId),
+        status: "completed",
+      }, { session })
+
       await db.collection("refunds").insertOne(
         {
           userId: new ObjectId(userId),
           amount: refundAmount,
           status: "processing",
           method: "auto_referral",
-          referralCount: await db.collection("referrals").countDocuments({
-            referrerId: new ObjectId(userId),
-            status: "completed",
-          }),
+          referralCount,
           requestedAt: new Date(),
           processedAt: new Date(),
         },
