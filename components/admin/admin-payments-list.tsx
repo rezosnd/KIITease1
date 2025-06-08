@@ -10,15 +10,18 @@ import { CreditCard, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function AdminPaymentsList() {
-  const [payments, setPayments] = useState([])
+  const [payments, setPayments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     fetchPayments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchPayments = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/admin/payments")
       const data = await response.json()
@@ -34,21 +37,43 @@ export default function AdminPaymentsList() {
     }
   }
 
-  const exportPayments = () => {
-    // Export functionality
-    toast({
-      title: "Export Started",
-      description: "Payment data export will be downloaded shortly",
-    })
+  // Real export logic: downloads a CSV file of all payments
+  const exportPayments = async () => {
+    setExporting(true)
+    try {
+      const response = await fetch("/api/admin/payments/export")
+      if (!response.ok) throw new Error("Failed to export payments")
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `payments-${new Date().toISOString().substring(0,10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+      toast({
+        title: "Exported",
+        description: "Payment data export downloaded.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to export payments",
+        variant: "destructive",
+      })
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Payment Management</h1>
-        <Button onClick={exportPayments} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={exportPayments} className="bg-green-600 hover:bg-green-700" disabled={exporting}>
           <Download className="h-4 w-4 mr-2" />
-          Export Data
+          {exporting ? "Exporting..." : "Export Data"}
         </Button>
       </div>
 
@@ -81,6 +106,13 @@ export default function AdminPaymentsList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {payments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                        No payments found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {payments.map((payment: any) => (
                     <TableRow key={payment._id}>
                       <TableCell>
@@ -88,8 +120,8 @@ export default function AdminPaymentsList() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{payment.user?.name}</div>
-                          <div className="text-sm text-gray-500">{payment.user?.email}</div>
+                          <div className="font-medium">{payment.user?.name || "N/A"}</div>
+                          <div className="text-sm text-gray-500">{payment.user?.email || ""}</div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -105,14 +137,14 @@ export default function AdminPaymentsList() {
                                 : "bg-yellow-100 text-yellow-800"
                           }
                         >
-                          {payment.status.toUpperCase()}
+                          {payment.status?.toUpperCase() || "UNKNOWN"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="font-mono text-sm">{payment.paymentId?.substring(0, 12)}...</div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{new Date(payment.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm">{payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : ""}</div>
                       </TableCell>
                     </TableRow>
                   ))}
