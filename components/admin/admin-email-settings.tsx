@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,12 +14,29 @@ export default function AdminEmailSettings() {
     smtpPort: "587",
     smtpUser: "",
     smtpPassword: "",
-    fromName: "EduPlatform",
+    fromName: "EduPlatfor",
     fromEmail: "",
   })
   const [testEmail, setTestEmail] = useState("")
   const [loading, setLoading] = useState(false)
+  const [testLoading, setTestLoading] = useState(false)
   const { toast } = useToast()
+
+  // Optionally: Load saved settings when the component mounts
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/admin/email-settings")
+        if (res.ok) {
+          const data = await res.json()
+          setEmailSettings(data)
+        }
+      } catch (e) {
+        // Ignore error, use defaults
+      }
+    }
+    fetchSettings()
+  }, [])
 
   const handleSaveSettings = async () => {
     setLoading(true)
@@ -36,7 +53,12 @@ export default function AdminEmailSettings() {
           description: "Email settings saved successfully",
         })
       } else {
-        throw new Error("Failed to save settings")
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || "Failed to save email settings",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -59,12 +81,15 @@ export default function AdminEmailSettings() {
       return
     }
 
-    setLoading(true)
+    setTestLoading(true)
     try {
       const response = await fetch("/api/admin/test-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: testEmail }),
+        body: JSON.stringify({
+          ...emailSettings,
+          email: testEmail,
+        }),
       })
 
       if (response.ok) {
@@ -73,7 +98,12 @@ export default function AdminEmailSettings() {
           description: "Test email sent successfully",
         })
       } else {
-        throw new Error("Failed to send test email")
+        const data = await response.json().catch(() => ({}))
+        toast({
+          title: "Error",
+          description: data.error || "Failed to send test email",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -82,14 +112,13 @@ export default function AdminEmailSettings() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setTestLoading(false)
     }
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Email Settings</h1>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* SMTP Configuration */}
         <Card>
@@ -108,6 +137,7 @@ export default function AdminEmailSettings() {
                   id="smtpHost"
                   value={emailSettings.smtpHost}
                   onChange={(e) => setEmailSettings({ ...emailSettings, smtpHost: e.target.value })}
+                  autoComplete="off"
                 />
               </div>
               <div>
@@ -116,6 +146,7 @@ export default function AdminEmailSettings() {
                   id="smtpPort"
                   value={emailSettings.smtpPort}
                   onChange={(e) => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -127,6 +158,7 @@ export default function AdminEmailSettings() {
                 type="email"
                 value={emailSettings.smtpUser}
                 onChange={(e) => setEmailSettings({ ...emailSettings, smtpUser: e.target.value })}
+                autoComplete="off"
               />
             </div>
 
@@ -137,6 +169,7 @@ export default function AdminEmailSettings() {
                 type="password"
                 value={emailSettings.smtpPassword}
                 onChange={(e) => setEmailSettings({ ...emailSettings, smtpPassword: e.target.value })}
+                autoComplete="new-password"
               />
             </div>
 
@@ -147,6 +180,7 @@ export default function AdminEmailSettings() {
                   id="fromName"
                   value={emailSettings.fromName}
                   onChange={(e) => setEmailSettings({ ...emailSettings, fromName: e.target.value })}
+                  autoComplete="off"
                 />
               </div>
               <div>
@@ -156,6 +190,7 @@ export default function AdminEmailSettings() {
                   type="email"
                   value={emailSettings.fromEmail}
                   onChange={(e) => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -184,21 +219,22 @@ export default function AdminEmailSettings() {
                 placeholder="test@example.com"
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
+                autoComplete="off"
               />
             </div>
 
-            <Button onClick={handleSendTestEmail} disabled={loading} className="w-full">
+            <Button onClick={handleSendTestEmail} disabled={testLoading || !testEmail} className="w-full">
               <Send className="h-4 w-4 mr-2" />
-              {loading ? "Sending..." : "Send Test Email"}
+              {testLoading ? "Sending..." : "Send Test Email"}
             </Button>
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium text-blue-800 mb-2">Gmail Setup Instructions:</h4>
-              <ol className="text-sm text-blue-700 space-y-1">
-                <li>1. Enable 2-Factor Authentication on your Gmail account</li>
-                <li>2. Go to Google Account Settings → Security → App passwords</li>
-                <li>3. Generate an app password for "Mail"</li>
-                <li>4. Use the 16-character app password in SMTP Password field</li>
+              <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                <li>Enable 2-Factor Authentication on your Gmail account</li>
+                <li>Go to Google Account Settings → Security → App passwords</li>
+                <li>Generate an app password for "Mail"</li>
+                <li>Use the 16-character app password in SMTP Password field</li>
               </ol>
             </div>
           </CardContent>
