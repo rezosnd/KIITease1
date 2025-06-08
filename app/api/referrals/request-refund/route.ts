@@ -4,11 +4,13 @@ import { processAutoRefund } from "@/lib/razorpay-service"
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate the user
     const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Process the automatic refund for the user
     await processAutoRefund(user.id)
 
     return NextResponse.json({
