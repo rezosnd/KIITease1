@@ -1,0 +1,258 @@
+{
+  "database": "kiitease",
+  "collections": {
+    "users": {
+      "description": "User accounts and profiles",
+      "fields": {
+        "_id": "ObjectId",
+        "name": "String (2-100 chars)",
+        "email": "String (unique, email format)",
+        "passwordHash": "String (bcrypt)",
+        "googleId": "String (unique, sparse)",
+        "profilePicture": "String (URL)",
+        "branch": "String (CSE|ECE|ME|CE|EE|IT|ETC|CSSE|CSCE)",
+        "year": "Number (1-4)",
+        "role": "String (free|paid|admin)",
+        "referralCode": "String (unique, 6-10 chars)",
+        "referredBy": "ObjectId",
+        "totalReferrals": "Number (≥0)",
+        "totalReferralEarnings": "Number (≥0)",
+        "paymentId": "String",
+        "paymentAmount": "Number",
+        "paymentDate": "Date",
+        "refundEligible": "Boolean",
+        "refundStatus": "String (not_eligible|eligible|requested|processed)",
+        "emailVerified": "Boolean",
+        "authMethod": "String (password|google|otp)",
+        "isActive": "Boolean",
+        "lastLogin": "Date",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": [
+        "email (unique)",
+        "referralCode (unique)",
+        "googleId (unique, sparse)",
+        "branch + year",
+        "role",
+        "referredBy",
+        "emailVerified",
+        "authMethod",
+        "createdAt (desc)"
+      ]
+    },
+    "payment_orders": {
+      "description": "Razorpay payment tracking",
+      "fields": {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "orderId": "String (unique)",
+        "razorpayOrderId": "String",
+        "razorpayPaymentId": "String",
+        "razorpaySignature": "String",
+        "amount": "Number (≥0)",
+        "currency": "String (INR)",
+        "status": "String (created|pending|completed|failed|cancelled)",
+        "referralCode": "String",
+        "referrerId": "ObjectId",
+        "referralReward": "Number",
+        "failureReason": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": [
+        "orderId (unique)",
+        "userId + createdAt (desc)",
+        "razorpayOrderId (sparse)",
+        "status",
+        "referrerId",
+        "createdAt (desc)"
+      ]
+    },
+    "referrals": {
+      "description": "Referral tracking and rewards",
+      "fields": {
+        "_id": "ObjectId",
+        "referrerId": "ObjectId",
+        "referredUserId": "ObjectId",
+        "referralCode": "String",
+        "paymentOrderId": "ObjectId",
+        "rewardAmount": "Number (≥0)",
+        "status": "String (pending|completed|failed)",
+        "completedAt": "Date",
+        "createdAt": "Date"
+      },
+      "indexes": ["referrerId + status", "referredUserId", "referralCode", "paymentOrderId", "createdAt (desc)"]
+    },
+    "notes": {
+      "description": "Study materials and notes",
+      "fields": {
+        "_id": "ObjectId",
+        "title": "String (3-200 chars)",
+        "description": "String (≤1000 chars)",
+        "subject": "String (2-100 chars)",
+        "branch": "String (CSE|ECE|ME|CE|EE|IT|ETC|CSSE|CSCE)",
+        "year": "Number (1-4)",
+        "semester": "Number (1-8)",
+        "fileUrl": "String",
+        "fileName": "String",
+        "fileSize": "Number",
+        "fileType": "String",
+        "uploadedBy": "ObjectId",
+        "downloadCount": "Number (≥0)",
+        "isPremium": "Boolean",
+        "isApproved": "Boolean",
+        "tags": "Array[String]",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": [
+        "branch + year + semester",
+        "subject",
+        "title + subject + description (text)",
+        "uploadedBy",
+        "isPremium",
+        "isApproved",
+        "createdAt (desc)",
+        "downloadCount (desc)"
+      ]
+    },
+    "teachers": {
+      "description": "Teacher profiles",
+      "fields": {
+        "_id": "ObjectId",
+        "name": "String (2-100 chars)",
+        "department": "String (CSE|ECE|ME|CE|EE|IT|ETC|CSSE|CSCE)",
+        "designation": "String",
+        "subjects": "Array[String]",
+        "averageRating": "Number (0-5)",
+        "totalReviews": "Number (≥0)",
+        "profilePicture": "String",
+        "isActive": "Boolean",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": ["name", "department", "averageRating (desc)", "totalReviews (desc)", "isActive"]
+    },
+    "reviews": {
+      "description": "Teacher reviews and ratings",
+      "fields": {
+        "_id": "ObjectId",
+        "teacherId": "ObjectId",
+        "userId": "ObjectId",
+        "rating": "Number (1-5)",
+        "subject": "String (2-100 chars)",
+        "comment": "String (≤1000 chars)",
+        "branch": "String (CSE|ECE|ME|CE|EE|IT|ETC|CSSE|CSCE)",
+        "year": "Number (1-4)",
+        "semester": "Number (1-8)",
+        "isAnonymous": "Boolean",
+        "isApproved": "Boolean",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": [
+        "teacherId + createdAt (desc)",
+        "userId",
+        "rating",
+        "branch + year",
+        "subject",
+        "isApproved",
+        "createdAt (desc)"
+      ]
+    },
+    "otps": {
+      "description": "OTP verification codes (TTL)",
+      "fields": {
+        "_id": "ObjectId",
+        "email": "String",
+        "otp": "String",
+        "type": "String (login|register|reset)",
+        "attempts": "Number",
+        "verified": "Boolean",
+        "expiresAt": "Date",
+        "createdAt": "Date"
+      },
+      "indexes": ["expiresAt (TTL)", "email + type", "email + createdAt"]
+    },
+    "rate_limits": {
+      "description": "API rate limiting (TTL)",
+      "fields": {
+        "_id": "ObjectId",
+        "key": "String",
+        "count": "Number",
+        "expiresAt": "Date",
+        "createdAt": "Date"
+      },
+      "indexes": ["key", "expiresAt (TTL)"]
+    },
+    "audit_logs": {
+      "description": "Security audit trail",
+      "fields": {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "action": "String",
+        "details": "Object",
+        "ipAddress": "String",
+        "userAgent": "String",
+        "createdAt": "Date"
+      },
+      "indexes": ["userId + createdAt (desc)", "action", "ipAddress", "createdAt (desc)"]
+    },
+    "email_logs": {
+      "description": "Email delivery tracking",
+      "fields": {
+        "_id": "ObjectId",
+        "type": "String",
+        "recipients": "Array[String]",
+        "subject": "String",
+        "status": "String (sent|failed|pending)",
+        "error": "String",
+        "sentAt": "Date",
+        "createdAt": "Date"
+      },
+      "indexes": ["sentAt", "recipients", "type", "status"]
+    },
+    "notifications": {
+      "description": "In-app notifications",
+      "fields": {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "title": "String",
+        "message": "String",
+        "type": "String",
+        "isRead": "Boolean",
+        "data": "Object",
+        "createdAt": "Date"
+      },
+      "indexes": ["userId + createdAt (desc)", "isRead", "type", "createdAt (desc)"]
+    },
+    "refunds": {
+      "description": "Refund processing",
+      "fields": {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "paymentOrderId": "ObjectId",
+        "amount": "Number (≥0)",
+        "reason": "String",
+        "status": "String (requested|approved|processed|rejected)",
+        "processedBy": "ObjectId",
+        "processedAt": "Date",
+        "refundId": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date"
+      },
+      "indexes": ["userId + createdAt (desc)", "status", "processedBy", "createdAt (desc)"]
+    },
+    "system_settings": {
+      "description": "Application configuration",
+      "fields": {
+        "_id": "ObjectId",
+        "key": "String (unique)",
+        "value": "Object",
+        "updatedAt": "Date"
+      },
+      "indexes": ["key (unique)"]
+    }
+  }
+}

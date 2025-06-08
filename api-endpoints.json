@@ -1,0 +1,426 @@
+{
+  "authentication": {
+    "login": {
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "body": {
+        "email": "user@example.com",
+        "password": "password123"
+      },
+      "response": {
+        "success": true,
+        "user": {
+          "id": "user_id",
+          "name": "User Name",
+          "email": "user@example.com",
+          "role": "free|paid|admin"
+        }
+      }
+    },
+    "register": {
+      "endpoint": "/api/auth/register",
+      "method": "POST",
+      "body": {
+        "name": "User Name",
+        "email": "user@example.com",
+        "password": "password123",
+        "branch": "CSE",
+        "year": 2,
+        "referralCode": "OPTIONAL"
+      },
+      "response": {
+        "success": true,
+        "message": "User created successfully"
+      }
+    },
+    "googleAuth": {
+      "endpoint": "/api/auth/google",
+      "method": "GET",
+      "response": "Redirects to Google OAuth"
+    },
+    "sendOTP": {
+      "endpoint": "/api/auth/send-otp",
+      "method": "POST",
+      "body": {
+        "email": "user@example.com",
+        "type": "login|register|reset"
+      },
+      "response": {
+        "success": true,
+        "message": "OTP sent successfully"
+      }
+    },
+    "verifyOTP": {
+      "endpoint": "/api/auth/verify-otp",
+      "method": "POST",
+      "body": {
+        "email": "user@example.com",
+        "otp": "123456",
+        "type": "login|register|reset"
+      },
+      "response": {
+        "success": true,
+        "user": {
+          "id": "user_id",
+          "name": "User Name",
+          "email": "user@example.com"
+        }
+      }
+    },
+    "logout": {
+      "endpoint": "/api/auth/logout",
+      "method": "POST",
+      "response": {
+        "success": true
+      }
+    },
+    "forgotPassword": {
+      "endpoint": "/api/auth/forgot-password",
+      "method": "POST",
+      "body": {
+        "email": "user@example.com"
+      },
+      "response": {
+        "success": true,
+        "message": "Password reset email sent"
+      }
+    },
+    "resetPassword": {
+      "endpoint": "/api/auth/reset-password",
+      "method": "POST",
+      "body": {
+        "token": "reset_token",
+        "password": "new_password"
+      },
+      "response": {
+        "success": true,
+        "message": "Password reset successful"
+      }
+    }
+  },
+  "payments": {
+    "createOrder": {
+      "endpoint": "/api/payment/create-order",
+      "method": "POST",
+      "body": {
+        "amount": 499,
+        "referralCode": "OPTIONAL"
+      },
+      "response": {
+        "success": true,
+        "order": {
+          "id": "order_id",
+          "amount": 49900,
+          "currency": "INR",
+          "key": "razorpay_key_id"
+        }
+      }
+    },
+    "verifyPayment": {
+      "endpoint": "/api/payment/verify",
+      "method": "POST",
+      "body": {
+        "razorpay_order_id": "order_id",
+        "razorpay_payment_id": "payment_id",
+        "razorpay_signature": "signature"
+      },
+      "response": {
+        "success": true,
+        "message": "Payment verified successfully"
+      }
+    }
+  },
+  "referrals": {
+    "getStats": {
+      "endpoint": "/api/referrals/stats",
+      "method": "GET",
+      "response": {
+        "referralCount": 5,
+        "totalEarnings": 250,
+        "refundEligible": false,
+        "refundStatus": "not_eligible",
+        "referralCode": "ABC123"
+      }
+    },
+    "requestRefund": {
+      "endpoint": "/api/referrals/request-refund",
+      "method": "POST",
+      "response": {
+        "success": true,
+        "message": "Refund request submitted"
+      }
+    }
+  },
+  "notes": {
+    "getAllNotes": {
+      "endpoint": "/api/notes",
+      "method": "GET",
+      "query": {
+        "branch": "CSE",
+        "year": 2,
+        "semester": 3,
+        "subject": "optional",
+        "isPremium": "true|false",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "notes": [],
+        "totalPages": 5,
+        "currentPage": 1
+      }
+    },
+    "uploadNote": {
+      "endpoint": "/api/notes",
+      "method": "POST",
+      "body": "FormData with file and metadata",
+      "response": {
+        "success": true,
+        "note": {}
+      }
+    },
+    "downloadNote": {
+      "endpoint": "/api/notes/{id}/download",
+      "method": "GET",
+      "response": "File download"
+    }
+  },
+  "teachers": {
+    "getAllTeachers": {
+      "endpoint": "/api/teachers",
+      "method": "GET",
+      "query": {
+        "department": "CSE",
+        "subject": "optional",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "teachers": [],
+        "totalPages": 3,
+        "currentPage": 1
+      }
+    },
+    "getTeacherReviews": {
+      "endpoint": "/api/teachers/{id}/reviews",
+      "method": "GET",
+      "response": {
+        "reviews": []
+      }
+    }
+  },
+  "reviews": {
+    "createReview": {
+      "endpoint": "/api/reviews",
+      "method": "POST",
+      "body": {
+        "teacherId": "teacher_id",
+        "rating": 4,
+        "subject": "Data Structures",
+        "comment": "Great teaching style",
+        "isAnonymous": false
+      },
+      "response": {
+        "success": true,
+        "review": {}
+      }
+    },
+    "getMyReviews": {
+      "endpoint": "/api/reviews/my-reviews",
+      "method": "GET",
+      "response": {
+        "reviews": []
+      }
+    },
+    "updateReview": {
+      "endpoint": "/api/reviews/{id}",
+      "method": "PUT",
+      "body": {
+        "rating": 5,
+        "comment": "Updated comment"
+      },
+      "response": {
+        "success": true,
+        "review": {}
+      }
+    },
+    "deleteReview": {
+      "endpoint": "/api/reviews/{id}",
+      "method": "DELETE",
+      "response": {
+        "success": true
+      }
+    }
+  },
+  "admin": {
+    "users": {
+      "endpoint": "/api/admin/users",
+      "method": "GET",
+      "query": {
+        "role": "free|paid|admin",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "users": [],
+        "totalPages": 5,
+        "currentPage": 1
+      }
+    },
+    "updateUser": {
+      "endpoint": "/api/admin/users/{id}",
+      "method": "PUT",
+      "body": {
+        "role": "paid",
+        "isActive": true
+      },
+      "response": {
+        "success": true,
+        "user": {}
+      }
+    },
+    "notes": {
+      "endpoint": "/api/admin/notes",
+      "method": "GET",
+      "query": {
+        "isApproved": "true|false",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "notes": [],
+        "totalPages": 3,
+        "currentPage": 1
+      }
+    },
+    "reviews": {
+      "endpoint": "/api/admin/reviews",
+      "method": "GET",
+      "query": {
+        "isApproved": "true|false",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "reviews": [],
+        "totalPages": 2,
+        "currentPage": 1
+      }
+    },
+    "payments": {
+      "endpoint": "/api/admin/payments",
+      "method": "GET",
+      "query": {
+        "status": "completed|failed",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "payments": [],
+        "totalPages": 4,
+        "currentPage": 1
+      }
+    },
+    "refunds": {
+      "endpoint": "/api/admin/refunds",
+      "method": "GET",
+      "query": {
+        "status": "requested|approved|processed|rejected",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "refunds": [],
+        "totalPages": 2,
+        "currentPage": 1
+      }
+    },
+    "processRefund": {
+      "endpoint": "/api/admin/process-refund",
+      "method": "POST",
+      "body": {
+        "refundId": "refund_id",
+        "action": "approve|reject",
+        "reason": "optional reason"
+      },
+      "response": {
+        "success": true,
+        "message": "Refund processed successfully"
+      }
+    },
+    "sendAnnouncement": {
+      "endpoint": "/api/admin/send-announcement",
+      "method": "POST",
+      "body": {
+        "subject": "Important Announcement",
+        "message": "Message content",
+        "recipients": {
+          "role": "all|free|paid",
+          "branch": "optional",
+          "year": "optional"
+        }
+      },
+      "response": {
+        "success": true,
+        "message": "Announcement sent to 150 users"
+      }
+    },
+    "emailStats": {
+      "endpoint": "/api/admin/email-stats",
+      "method": "GET",
+      "response": {
+        "totalSent": 500,
+        "deliveryRate": 98.5,
+        "byType": {
+          "welcome": 120,
+          "payment": 80,
+          "announcement": 300
+        }
+      }
+    },
+    "databaseHealth": {
+      "endpoint": "/api/admin/database-health",
+      "method": "GET",
+      "response": {
+        "status": "healthy",
+        "collections": [],
+        "paymentIntegrity": {},
+        "securityStatus": {},
+        "recommendations": []
+      }
+    }
+  },
+  "notifications": {
+    "getNotifications": {
+      "endpoint": "/api/notifications",
+      "method": "GET",
+      "query": {
+        "read": "true|false",
+        "page": 1,
+        "limit": 10
+      },
+      "response": {
+        "notifications": [],
+        "unreadCount": 3,
+        "totalPages": 2,
+        "currentPage": 1
+      }
+    },
+    "markAsRead": {
+      "endpoint": "/api/notifications/{id}/read",
+      "method": "POST",
+      "response": {
+        "success": true
+      }
+    }
+  },
+  "health": {
+    "endpoint": "/api/health",
+    "method": "GET",
+    "response": {
+      "status": "ok",
+      "version": "1.0.0",
+      "uptime": 3600
+    }
+  }
+}
