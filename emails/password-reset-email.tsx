@@ -1,4 +1,15 @@
-import { Body, Container, Head, Heading, Html, Img, Link, Preview, Section, Text } from "@react-email/components"
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components"
 
 interface PasswordResetEmailProps {
   name: string
@@ -90,12 +101,12 @@ export const PasswordResetEmail = ({ name, resetLink }: PasswordResetEmailProps)
 }
 
 // Styles
-const main = {
+const main: React.CSSProperties = {
   backgroundColor: "#f6f9fc",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 }
 
-const container = {
+const container: React.CSSProperties = {
   margin: "0 auto",
   padding: "40px 20px",
   backgroundColor: "#ffffff",
@@ -106,64 +117,64 @@ const container = {
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
 }
 
-const logo = {
+const logo: React.CSSProperties = {
   margin: "0 auto",
   marginBottom: "20px",
   display: "block",
 }
 
-const heading = {
+const heading: React.CSSProperties = {
   fontSize: "24px",
   fontWeight: "bold",
-  textAlign: "center" as const,
+  textAlign: "center",
   margin: "30px 0",
   color: "#4f46e5",
 }
 
-const section = {
+const section: React.CSSProperties = {
   margin: "30px 0",
 }
 
-const text = {
+const text: React.CSSProperties = {
   fontSize: "16px",
   lineHeight: "26px",
   color: "#333",
   marginBottom: "16px",
 }
 
-const buttonContainer = {
-  textAlign: "center" as const,
+const buttonContainer: React.CSSProperties = {
+  textAlign: "center",
   margin: "30px 0",
 }
 
-const button = {
+const button: React.CSSProperties = {
   backgroundColor: "#4f46e5",
   borderRadius: "6px",
   color: "#fff",
   fontSize: "16px",
   fontWeight: "bold",
   textDecoration: "none",
-  textAlign: "center" as const,
+  textAlign: "center",
   display: "inline-block",
   padding: "14px 28px",
   boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)",
 }
 
-const linkContainer = {
+const linkContainer: React.CSSProperties = {
   backgroundColor: "#f3f4f6",
   borderRadius: "6px",
   padding: "12px",
   marginBottom: "24px",
-  wordBreak: "break-all" as const,
+  wordBreak: "break-all",
   border: "1px solid #e5e7eb",
 }
 
-const textLink = {
+const textLink: React.CSSProperties = {
   color: "#4f46e5",
   textDecoration: "underline",
 }
 
-const securityBox = {
+const securityBox: React.CSSProperties = {
   backgroundColor: "#fef3c7",
   borderRadius: "6px",
   padding: "16px",
@@ -171,7 +182,7 @@ const securityBox = {
   border: "1px solid #fde68a",
 }
 
-const securityTitle = {
+const securityTitle: React.CSSProperties = {
   fontSize: "16px",
   fontWeight: "bold",
   color: "#92400e",
@@ -179,23 +190,23 @@ const securityTitle = {
   marginBottom: "8px",
 }
 
-const securityText = {
+const securityText: React.CSSProperties = {
   fontSize: "14px",
   color: "#92400e",
   marginBottom: "4px",
   lineHeight: "20px",
 }
 
-const footer = {
+const footer: React.CSSProperties = {
   fontSize: "14px",
   color: "#898989",
-  textAlign: "center" as const,
+  textAlign: "center",
   marginTop: "40px",
   paddingTop: "20px",
   borderTop: "1px solid #e5e7eb",
 }
 
-const footerLink = {
+const footerLink: React.CSSProperties = {
   color: "#898989",
   textDecoration: "underline",
   margin: "0 5px",
