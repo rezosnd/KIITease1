@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email, name, and type are required" }, { status: 400 })
     }
 
-    // Check rate limiting
+    // Check rate limiting to prevent abuse
     const rateLimit = await checkOTPRateLimit(email)
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase()
 
-    // For registration, validate all required fields and check if user exists
+    // Registration: validate and check if user exists
     if (type === "registration") {
       try {
         registerSchema.parse(body)
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "User already exists" }, { status: 400 })
       }
 
-      // Store registration data temporarily
+      // Store registration data in pending_registrations (overwrite any previous)
       await db.collection("pending_registrations").deleteMany({ email: email.toLowerCase() })
       await db.collection("pending_registrations").insertOne({
         ...otherData,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // For login, check if user exists
+    // Login: check if user exists
     if (type === "login") {
       const user = await db.collection("users").findOne({ email: email.toLowerCase() })
       if (!user) {
@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
 
     // Send OTP email
     const emailResult = await sendOTPEmail(email, name, otp, type)
-
     if (!emailResult.success) {
       return NextResponse.json({ error: "Failed to send OTP email" }, { status: 500 })
     }
