@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+
 const nextConfig = {
-  // Server-side external packages (prevents bundling into client)
+  // Server-side external packages
   serverExternalPackages: [
     "mongodb",
     "mongoose",
@@ -12,7 +15,7 @@ const nextConfig = {
   ],
 
   webpack: (config, { isServer }) => {
-    // Client-side module replacements
+    // Client-side polyfills
     if (!isServer) {
       config.resolve.fallback = {
         fs: false,
@@ -26,18 +29,17 @@ const nextConfig = {
         zlib: false,
         http: false,
         https: false
-      };
+      }
 
-      // Modern browser polyfills
       config.resolve.alias = {
         ...config.resolve.alias,
         'node:process': 'process/browser',
         'node:stream': 'stream-browserify',
         'node:crypto': 'crypto-browserify'
-      };
+      }
     }
 
-    // Common external dependencies
+    // External dependencies
     config.externals = [
       ...(config.externals || []),
       {
@@ -46,59 +48,44 @@ const nextConfig = {
         'supports-color': 'commonjs supports-color',
         'mongodb-client-encryption': 'commonjs mongodb-client-encryption'
       }
-    ];
+    ]
 
-    return config;
+    return config
   },
 
   // Security headers
-  headers: async () => [
-    {
-      source: "/(.*)",
-      headers: [
-        { key: "X-Frame-Options", value: "DENY" },
-        { key: "X-Content-Type-Options", value: "nosniff" },
-        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }
-      ]
-    }
-  ],
+  headers: async () => [{
+    source: "/(.*)",
+    headers: [
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }
+    ]
+  }],
 
   // Environment variables
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY
   },
 
-  // Optimization and build settings
+  // Optimization settings
   poweredByHeader: false,
   compress: true,
   output: "standalone",
 
   // Image handling
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**"
-      }
-    ],
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
     formats: ["image/avif", "image/webp"],
     unoptimized: process.env.NODE_ENV === "development"
   },
 
-  // TypeScript/ESLint overrides (temporary)
-  eslint: {
-    ignoreDuringBuilds: true
-  },
-  typescript: {
-    ignoreBuildErrors: true
-  },
+  // Temporary overrides
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true }
+}
 
-  // Experimental features (if needed)
-  experimental: {
-    instrumentationHook: true
-  }
-};
+export default nextConfig
 
-export default nextConfig;
 
