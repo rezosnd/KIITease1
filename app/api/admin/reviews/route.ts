@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate admin user
     const user = await getAuthUser(request)
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -11,53 +12,56 @@ export async function GET(request: NextRequest) {
 
     const db = await getDatabase()
 
-    const reviews = await db
-      .collection("reviews")
+    // Aggregate refund eligible users with referral info
+    const refunds = await db
+      .collection("users")
       .aggregate([
         {
-          $lookup: {
-            from: "teachers",
-            localField: "teacherId",
-            foreignField: "_id",
-            as: "teacher",
+          $match: {
+            refundEligible: true,
           },
         },
         {
           $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "_id",
-            as: "user",
+            from: "referrals",
+            localField: "_id",
+            foreignField: "referrerId",
+            as: "referrals",
           },
         },
         {
-          $unwind: "$teacher",
-        },
-        {
-          $unwind: "$user",
+          $addFields: {
+            referralCount: {
+              $size: {
+                $filter: {
+                  input: "$referrals",
+                  as: "ref",
+                  cond: { $eq: ["$$ref.status", "completed"] },
+                },
+              },
+            },
+          },
         },
         {
           $project: {
-            rating: 1,
-            comment: 1,
-            subject: 1,
-            branch: 1,
-            year: 1,
-            createdAt: 1,
-            "teacher.name": 1,
-            "teacher.department": 1,
-            "user.name": 1,
+            _id: 1,
+            name: 1,
+            email: 1,
+            paymentAmount: 1,
+            refundStatus: 1,
+            referralCount: 1,
+            updatedAt: 1,
           },
         },
         {
-          $sort: { createdAt: -1 },
+          $sort: { updatedAt: -1 },
         },
       ])
       .toArray()
 
-    return NextResponse.json({ reviews })
+    return NextResponse.json({ refunds })
   } catch (error) {
-    console.error("Admin reviews fetch error:", error)
+    console.error("Admin refunds fetch error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
