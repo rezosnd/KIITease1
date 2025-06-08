@@ -9,7 +9,17 @@ import { useToast } from "@/hooks/use-toast"
 import { CreditCard, Check, Star, Zap, Crown, Gift } from "lucide-react"
 
 interface PaymentSectionProps {
-  user: any
+  user: {
+    name: string
+    email: string
+    role: "free" | "paid"
+  }
+}
+
+declare global {
+  interface Window {
+    Razorpay: any
+  }
 }
 
 export default function PaymentSection({ user }: PaymentSectionProps) {
@@ -28,7 +38,7 @@ export default function PaymentSection({ user }: PaymentSectionProps) {
     setLoading(true)
 
     try {
-      // Create Razorpay order
+      // Create Razorpay order on your backend
       const orderResponse = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,6 +51,17 @@ export default function PaymentSection({ user }: PaymentSectionProps) {
 
       const orderData = await orderResponse.json()
 
+      // Load Razorpay checkout if not already loaded
+      if (!window.Razorpay) {
+        const script = document.createElement("script")
+        script.src = "https://checkout.razorpay.com/v1/checkout.js"
+        script.async = true
+        document.body.appendChild(script)
+        await new Promise((resolve) => {
+          script.onload = resolve
+        })
+      }
+
       // Initialize Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -51,7 +72,7 @@ export default function PaymentSection({ user }: PaymentSectionProps) {
         order_id: orderData.id,
         handler: async (response: any) => {
           try {
-            // Verify payment
+            // Verify payment on your backend
             const verifyResponse = await fetch("/api/payment/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -86,9 +107,12 @@ export default function PaymentSection({ user }: PaymentSectionProps) {
         theme: {
           color: "#4f46e5",
         },
+        modal: {
+          ondismiss: () => setLoading(false),
+        },
       }
 
-      const razorpay = new (window as any).Razorpay(options)
+      const razorpay = new window.Razorpay(options)
       razorpay.open()
     } catch (error) {
       toast({
@@ -268,9 +292,6 @@ export default function PaymentSection({ user }: PaymentSectionProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Razorpay Script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     </div>
   )
 }
