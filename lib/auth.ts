@@ -74,3 +74,11 @@ export function toObjectId(id: string): ObjectId {
   }
   return new ObjectId(id)
 }
+
+/**
+ * Verify authentication for API routes.
+ * Returns the decoded user if valid, otherwise null.
+ */
+export async function verifyAuth(request: NextRequest) {
+  return await getAuthUser(request)
+}
