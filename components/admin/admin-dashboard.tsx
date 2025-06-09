@@ -22,6 +22,8 @@ import {
   Download,
   Upload,
   UserPlus,
+  Plus,
+  X,
 } from "lucide-react"
 import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminNotesList from "@/components/admin/admin-notes-list"
@@ -30,6 +32,191 @@ import AdminPaymentsList from "@/components/admin/admin-payments-list"
 import AdminRefundsList from "@/components/admin/admin-refunds-list"
 import AdminEmailSettings from "@/components/admin/admin-email-settings"
 import AdminSystemSettings from "@/components/admin/admin-system-settings"
+
+// --- Add Teacher Modal ---
+function AdminAddTeacherModal({ open, onClose, onAdded }: { open: boolean, onClose: () => void, onAdded?: () => void }) {
+  const { toast } = useToast()
+  const [name, setName] = useState("")
+  const [department, setDepartment] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleAdd = async () => {
+    if (!name.trim() || !department.trim()) {
+      toast({ title: "Error", description: "All fields required", variant: "destructive" })
+      return
+    }
+    setLoading(true)
+    const res = await fetch("/api/admin/teachers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, department }),
+    })
+    setLoading(false)
+    const data = await res.json()
+    if (res.ok) {
+      setName("")
+      setDepartment("")
+      toast({ title: "Success", description: "Teacher added!" })
+      onAdded && onAdded()
+      onClose()
+    } else {
+      toast({ title: "Error", description: data.error || "Failed to add teacher", variant: "destructive" })
+    }
+  }
+
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
+        <button className="absolute top-2 right-2" onClick={onClose}><X className="h-5 w-5" /></button>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Plus className="h-5 w-5" />Add Teacher</h2>
+        <div className="space-y-3">
+          <input
+            className="w-full border rounded px-3 py-2"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Teacher Name"
+            disabled={loading}
+          />
+          <input
+            className="w-full border rounded px-3 py-2"
+            value={department}
+            onChange={e => setDepartment(e.target.value)}
+            placeholder="Department"
+            disabled={loading}
+          />
+        </div>
+        <Button
+          className="w-full mt-4"
+          onClick={handleAdd}
+          disabled={loading || !name || !department}
+        >
+          {loading ? "Adding..." : "Add Teacher"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// --- Upload Notes Modal ---
+function AdminUploadNotesModal({ open, onClose, onUploaded }: { open: boolean, onClose: () => void, onUploaded?: () => void }) {
+  const { toast } = useToast()
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast({ title: "Error", description: "Select a file to upload", variant: "destructive" })
+      return
+    }
+    setLoading(true)
+    const formData = new FormData()
+    formData.append("file", file)
+    const res = await fetch("/api/admin/notes/upload", {
+      method: "POST",
+      body: formData,
+    })
+    setLoading(false)
+    if (res.ok) {
+      toast({ title: "Success", description: "Notes uploaded!" })
+      setFile(null)
+      onUploaded && onUploaded()
+      onClose()
+    } else {
+      toast({ title: "Error", description: "Upload failed", variant: "destructive" })
+    }
+  }
+
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
+        <button className="absolute top-2 right-2" onClick={onClose}><X className="h-5 w-5" /></button>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Upload className="h-5 w-5" />Upload Notes</h2>
+        <input
+          type="file"
+          className="w-full mb-4"
+          onChange={e => setFile(e.target.files?.[0] ?? null)}
+          disabled={loading}
+        />
+        <Button
+          className="w-full"
+          onClick={handleUpload}
+          disabled={loading || !file}
+        >
+          {loading ? "Uploading..." : "Upload"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// --- Send Email Modal ---
+function AdminSendEmailModal({ open, onClose, onSent }: { open: boolean, onClose: () => void, onSent?: () => void }) {
+  const { toast } = useToast()
+  const [to, setTo] = useState("")
+  const [subject, setSubject] = useState("")
+  const [body, setBody] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSend = async () => {
+    if (!to.trim() || !subject.trim() || !body.trim()) {
+      toast({ title: "Error", description: "All fields required", variant: "destructive" })
+      return
+    }
+    setLoading(true)
+    const res = await fetch("/api/admin/mail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to, subject, text: body }),
+    })
+    setLoading(false)
+    const data = await res.json()
+    if (res.ok) {
+      toast({ title: "Success", description: "Email sent!" })
+      setTo(""); setSubject(""); setBody("")
+      onSent && onSent()
+      onClose()
+    } else {
+      toast({ title: "Error", description: data.error || "Failed to send email", variant: "destructive" })
+    }
+  }
+
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative">
+        <button className="absolute top-2 right-2" onClick={onClose}><X className="h-5 w-5" /></button>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Mail className="h-5 w-5" />Send Email</h2>
+        <input
+          className="w-full border rounded px-3 py-2 mb-2"
+          placeholder="Recipient Email"
+          value={to}
+          onChange={e => setTo(e.target.value)}
+          disabled={loading}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 mb-2"
+          placeholder="Subject"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+          disabled={loading}
+        />
+        <textarea
+          className="w-full border rounded px-3 py-2 mb-2"
+          placeholder="Message"
+          rows={4}
+          value={body}
+          onChange={e => setBody(e.target.value)}
+          disabled={loading}
+        />
+        <Button className="w-full" onClick={handleSend} disabled={loading || !to || !subject || !body}>
+          {loading ? "Sending..." : "Send Email"}
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 interface AdminDashboardProps {
   user: {
@@ -74,6 +261,9 @@ export default function AdminDashboard({
   const router = useRouter()
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [showAddTeacher, setShowAddTeacher] = useState(false)
+  const [showUploadNotes, setShowUploadNotes] = useState(false)
+  const [showSendEmail, setShowSendEmail] = useState(false)
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
@@ -144,6 +334,11 @@ export default function AdminDashboard({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Modals */}
+      <AdminAddTeacherModal open={showAddTeacher} onClose={() => setShowAddTeacher(false)} />
+      <AdminUploadNotesModal open={showUploadNotes} onClose={() => setShowUploadNotes(false)} />
+      <AdminSendEmailModal open={showSendEmail} onClose={() => setShowSendEmail(false)} />
+
       {/* Navigation */}
       <motion.nav
         className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"
@@ -365,15 +560,27 @@ export default function AdminDashboard({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Button variant="outline" className="flex flex-col h-24 items-center justify-center">
+                    <Button
+                      variant="outline"
+                      className="flex flex-col h-24 items-center justify-center"
+                      onClick={() => setShowUploadNotes(true)}
+                    >
                       <Upload className="h-6 w-6 mb-2" />
                       <span>Upload Notes</span>
                     </Button>
-                    <Button variant="outline" className="flex flex-col h-24 items-center justify-center">
+                    <Button
+                      variant="outline"
+                      className="flex flex-col h-24 items-center justify-center"
+                      onClick={() => setShowAddTeacher(true)}
+                    >
                       <UserPlus className="h-6 w-6 mb-2" />
-                      <span>Add User</span>
+                      <span>Add Teacher</span>
                     </Button>
-                    <Button variant="outline" className="flex flex-col h-24 items-center justify-center">
+                    <Button
+                      variant="outline"
+                      className="flex flex-col h-24 items-center justify-center"
+                      onClick={() => setShowSendEmail(true)}
+                    >
                       <Mail className="h-6 w-6 mb-2" />
                       <span>Send Email</span>
                     </Button>
