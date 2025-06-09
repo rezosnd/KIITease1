@@ -74,3 +74,20 @@ export function validateFileUpload(file: File): { valid: boolean; error?: string
 
   return { valid: true }
 }
+
+/**
+ * Validate payment amount.
+ * Only allows numbers between 1 and 100000 (adjust as needed).
+ */
+export function validatePaymentAmount(amount: number): { valid: boolean; error?: string } {
+  if (typeof amount !== "number" || isNaN(amount)) {
+    return { valid: false, error: "Amount must be a valid number." }
+  }
+  if (amount <= 0) {
+    return { valid: false, error: "Amount must be greater than zero." }
+  }
+  if (amount > 100000) {
+    return { valid: false, error: "Amount exceeds maximum allowed limit." }
+  }
+  return { valid: true }
+}
