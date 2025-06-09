@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
     const db = await getDatabase()
     const user = await db.collection("users").findOne({ email: email.toLowerCase() })
 
-    // Check user existence and password validity
-    if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+    // Check user existence and password validity (NO await needed)
+    if (!user || !user.passwordHash || !verifyPassword(password, user.passwordHash)) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax", // "lax" is recommended for most apps
       maxAge: 7 * 24 * 60 * 60, // 7 days
     })
 
