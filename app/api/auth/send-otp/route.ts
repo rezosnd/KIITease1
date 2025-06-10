@@ -12,6 +12,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email, name, and type are required" }, { status: 400 });
     }
 
+    // Only allow known OTP types
+    if (!["registration", "login"].includes(type)) {
+      return NextResponse.json({ error: "Invalid OTP type" }, { status: 400 });
+    }
+
     // Rate limiting
     const rateLimit = await checkOTPRateLimit(email);
     if (!rateLimit.allowed) {
@@ -27,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (type === "registration") {
       try {
         registerSchema.parse(body);
-      } catch (error: any) {
+      } catch {
         return NextResponse.json({ error: "Invalid registration data" }, { status: 400 });
       }
 
@@ -62,7 +67,6 @@ export async function POST(request: NextRequest) {
     // Send OTP email
     const emailResult = await sendOTPEmail(email, name, otp, type);
     if (!emailResult.success) {
-      // In DEV, you may want to include the error for debugging:
       return NextResponse.json(
         { error: emailResult.error || "Failed to send OTP email" },
         { status: 500 }
@@ -74,13 +78,13 @@ export async function POST(request: NextRequest) {
       message: "OTP sent successfully",
       expiresIn: 600, // 10 minutes in seconds
     });
-  } catch (error: any) {
+  } catch (error) {
     // Show detailed error in dev, generic in prod
     const isDev = process.env.NODE_ENV !== "production";
     return NextResponse.json(
       {
         error: isDev
-          ? error?.message || String(error) || "Internal server error"
+          ? (error instanceof Error ? error.message : String(error))
           : "Internal server error"
       },
       { status: 500 }
