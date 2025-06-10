@@ -9,8 +9,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { to, subject, html } = await req.json();
-  if (!to || !subject || !html) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+
+  // Collect missing fields
+  const missingFields: string[] = [];
+  if (!to) missingFields.push("to");
+  if (!subject) missingFields.push("subject");
+  if (!html) missingFields.push("html");
+  if (missingFields.length > 0) {
+    return NextResponse.json(
+      { error: `Missing fields: ${missingFields.join(", ")}` },
+      { status: 400 }
+    );
   }
 
   try {
