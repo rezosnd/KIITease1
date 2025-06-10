@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { sendMail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 import { getDatabase } from "@/lib/mongodb";
 import { getAuthUser } from "@/lib/auth";
 
@@ -8,34 +8,39 @@ export async function POST(req: NextRequest) {
   if (!user || user.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { to, subject, text } = await req.json();
-  if (!to || !subject || !text) {
+  const { to, subject, html } = await req.json();
+  if (!to || !subject || !html) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
   try {
     // Send email using your email utility
-    await sendMail({ to, subject, text });
+    const result = await sendEmail({ to, subject, html });
 
-    // Optionally log the email in your database for stats
+    // Log the email in your database for stats
     const db = await getDatabase();
     await db.collection("email_logs").insertOne({
       to,
       subject,
-      text,
-      status: "sent", // or "failed" if exception thrown
+      html,
+      status: result.success ? "sent" : "failed",
       sentAt: new Date(),
       admin: user.email,
+      error: result.success ? null : result.error,
     });
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    // Optionally log failed email
+    // Log failed email
     const db = await getDatabase();
     await db.collection("email_logs").insertOne({
       to,
       subject,
-      text,
+      html,
       status: "failed",
       sentAt: new Date(),
       admin: user.email,
