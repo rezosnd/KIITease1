@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
           error: "Password is too weak",
           feedback: passwordValidation.feedback,
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       userId: user._id,
       action: "password_reset_completed",
       ip,
-      userAgent: request.headers.get("user-agent"),
+      userAgent: request.headers.get("user-agent") || "",
       details: { email: user.email },
       createdAt: new Date(),
     })
@@ -90,13 +90,17 @@ export async function POST(request: NextRequest) {
       details: { action: "password_reset_completed" },
     })
 
-    logger.info("Password reset completed", { userId: user._id.toString(), email: user.email }, { ip })
+    logger.info(
+      "Password reset completed",
+      { userId: user._id.toString(), email: user.email },
+      { ip }
+    )
 
     return NextResponse.json({
       success: true,
       message: "Password has been reset successfully",
     })
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Password reset error", error, { ip })
 
     await logSecurityEvent({
