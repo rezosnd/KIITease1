@@ -29,12 +29,11 @@ export async function POST(request: NextRequest) {
     const user = await db.collection("users").findOne({ email })
 
     // Always return success to prevent email enumeration attacks
-    // Only send reset email if user exists
     if (user) {
       // Generate secure token
       const resetToken = crypto.randomBytes(32).toString("hex")
       const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex")
-      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
 
       // Store hashed token and expiry in DB
       await db.collection("users").updateOne(
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
         userId: user._id,
         action: "password_reset_requested",
         ip,
-        userAgent: request.headers.get("user-agent"),
+        userAgent: request.headers.get("user-agent") || "",
         details: { email },
         createdAt: new Date(),
       })
@@ -92,7 +91,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "If an account with that email exists, we've sent password reset instructions.",
     })
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Forgot password error", error, { ip })
 
     await logSecurityEvent({
